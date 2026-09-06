@@ -151,6 +151,8 @@ Open your browser at `http://localhost:5173`.
 
 ---
 
+---
+
 ### Option B: Docker Compose
 ```bash
 docker-compose up --build
@@ -159,6 +161,42 @@ docker-compose up --build
 - Backend API: `http://localhost:5000`
 - Python QDS Core: `http://localhost:8000`
 - MongoDB: `localhost:27017`
+
+---
+
+### Option C: 1-Click Deploy on Render (Render Blueprint)
+
+The repository includes a production-ready `render.yaml` Blueprint that automatically provisions all 3 microservices and connects their internal environment variables.
+
+#### Step 1: Push Repository to GitHub
+```bash
+git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+git branch -M main
+git push -u origin main
+```
+
+#### Step 2: Get a Free MongoDB Atlas Connection String
+Render does not host native free MongoDB instances. You can get a 100% free MongoDB database in 2 minutes:
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and sign up / log in.
+2. Create a free **M0 Shared Cluster**.
+3. Under **Database Access**, create a database user (e.g. `qchat_admin` with a password).
+4. Under **Network Access**, click **Add IP Address** and select **Allow Access from Anywhere (`0.0.0.0/0`)**.
+5. Click **Connect** &gt; **Drivers** &gt; Copy your connection URI, e.g.:
+   ```
+   mongodb+srv://qchat_admin:<password>@cluster0.abcde.mongodb.net/qchat?retryWrites=true&w=majority
+   ```
+
+#### Step 3: Deploy on Render
+1. Log in to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** in the top right and select **Blueprint**.
+3. Connect your GitHub repository containing this codebase.
+4. Render will detect `render.yaml` and display the 3 services to deploy:
+   - `qchat-qds-core` (Python FastAPI Web Service)
+   - `qchat-backend` (Node.js Express Web Service)
+   - `qchat-frontend` (Static Site with global CDN)
+5. In the prompt for `MONGO_URI`, paste your MongoDB Atlas connection string from Step 2.
+6. Click **Apply**. Render will automatically build, deploy, and wire up all services!
+7. Once deployed, open your `qchat-frontend.onrender.com` URL to use QChat live on the web!
 
 ---
 
