@@ -4,7 +4,14 @@ const ThreatLog = require('../models/ThreatLog');
 const SecuritySession = require('../models/SecuritySession');
 const Message = require('../models/Message');
 
-let rawQdsUrl = process.env.QDS_SERVICE_URL || 'http://localhost:8000';
+const mongoose = require('mongoose');
+
+let rawQdsUrl = process.env.QDS_SERVICE_URL;
+if (!rawQdsUrl || (rawQdsUrl.includes('localhost') && process.env.NODE_ENV === 'production')) {
+  rawQdsUrl = 'https://qchat-qds-core.onrender.com';
+} else if (!rawQdsUrl) {
+  rawQdsUrl = 'http://localhost:8000';
+}
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
   rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
 }
@@ -128,51 +135,55 @@ exports.simulateAttack = async (req, res) => {
       chatId: chatId || 'demo_chat',
       attackType,
       sampleMessage: sampleMessage || 'Unauthorized transfer of funds'
-    }, { timeout: 6000 });
+    }, { timeout: 25000 });
 
     const simResult = qdsRes.data;
 
-    // Log to ThreatLog in MongoDB if chatId provided
-    if (chatId) {
-      const threatLog = new ThreatLog({
-        chatId,
-        attackType,
-        severity: simResult.verificationResult?.severity || 'HIGH',
-        reason: simResult.verificationResult?.reason || 'Simulated attack detected',
-        evidence: simResult.verificationResult?.evidence || {},
-        detectedBy: 'Deterministic Quantum Threat Engine (Simulation Console)'
-      });
-      await threatLog.save();
-
-      // Emit real-time security alert via Socket.io
-      const io = req.app.get('io');
-      if (io) {
-        io.to(`chat:${chatId}`).emit('security:alert', {
+    // Log to ThreatLog in MongoDB if chatId provided and DB is connected
+    if (chatId && mongoose.connection.readyState === 1) {
+      try {
+        const threatLog = new ThreatLog({
           chatId,
           attackType,
           severity: simResult.verificationResult?.severity || 'HIGH',
           reason: simResult.verificationResult?.reason || 'Simulated attack detected',
           evidence: simResult.verificationResult?.evidence || {},
-          timestamp: new Date()
+          detectedBy: 'Deterministic Quantum Threat Engine (Simulation Console)'
         });
+        await threatLog.save();
+      } catch (dbErr) {
+        console.warn('Could not save threatLog to MongoDB:', dbErr.message);
       }
+    }
+
+    // Always emit real-time security alert via Socket.io
+    const io = req.app.get('io');
+    if (io && chatId) {
+      io.to(`chat:${chatId}`).emit('security:alert', {
+        chatId,
+        attackType,
+        severity: simResult.verificationResult?.severity || 'HIGH',
+        reason: simResult.verificationResult?.reason || 'Simulated attack detected',
+        evidence: simResult.verificationResult?.evidence || {},
+        timestamp: new Date()
+      });
     }
 
     return res.status(200).json({ simulation: simResult });
   } catch (error) {
-    console.error('Error simulating attack:', error);
-    return res.status(500).json({ error: 'Error running attack simulation.' });
+    console.error('Error simulating attack:', error.message);
+    return res.status(500).json({ error: 'Error running attack simulation: ' + (error.response?.data?.detail || error.message) });
   }
 };
 
 // Get benchmark experiment matrix
 exports.getBenchmarkMatrix = async (req, res) => {
   try {
-    const qdsRes = await axios.get(`${QDS_URL}/qds/benchmark/matrix`, { timeout: 8000 });
+    const qdsRes = await axios.get(`${QDS_URL}/qds/benchmark/matrix`, { timeout: 25000 });
     return res.status(200).json(qdsRes.data);
   } catch (error) {
-    console.error('Error fetching benchmark matrix:', error);
-    return res.status(500).json({ error: 'Error fetching benchmark matrix.' });
+    console.error('Error fetching benchmark matrix:', error.message);
+    return res.status(500).json({ error: 'Error fetching benchmark matrix: ' + (error.response?.data?.detail || error.message) });
   }
 };
 
@@ -184,11 +195,11 @@ exports.simulateTeleportSteps = async (req, res) => {
       stateLabel: stateLabel || '00',
       perturb: Boolean(perturb),
       perturbType
-    }, { timeout: 6000 });
+    }, { timeout: 25000 });
     return res.status(200).json(qdsRes.data);
   } catch (error) {
-    console.error('Error in simulateTeleportSteps:', error);
-    return res.status(500).json({ error: 'Error simulating teleportation steps.' });
+    console.error('Error in simulateTeleportSteps:', error.message);
+    return res.status(500).json({ error: 'Error simulating teleportation steps: ' + (error.response?.data?.detail || error.message) });
   }
 };
 

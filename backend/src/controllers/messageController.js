@@ -7,7 +7,12 @@ const ThreatLog = require('../models/ThreatLog');
 const NonceRegistry = require('../models/NonceRegistry');
 const { encryptAESGCM, sha256 } = require('../utils/cryptoHelper');
 
-let rawQdsUrl = process.env.QDS_SERVICE_URL || 'http://localhost:8000';
+let rawQdsUrl = process.env.QDS_SERVICE_URL;
+if (!rawQdsUrl || (rawQdsUrl.includes('localhost') && process.env.NODE_ENV === 'production')) {
+  rawQdsUrl = 'https://qchat-qds-core.onrender.com';
+} else if (!rawQdsUrl) {
+  rawQdsUrl = 'http://localhost:8000';
+}
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
   rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
 }
@@ -130,7 +135,7 @@ exports.sendMessage = async (req, res) => {
         isSignerValid: (simulateAttack !== 'IMPERSONATION'),
         isVerifierAuthorized: (simulateAttack !== 'UNAUTHORIZED_VERIFICATION'),
         simulateAttack: simulateAttack || null
-      }, { timeout: 5000 });
+      }, { timeout: 25000 });
       verification = verifyRes.data;
     } catch (qdsVerifyErr) {
       console.warn('QDS Verify fallback:', qdsVerifyErr.message);

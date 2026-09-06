@@ -4,7 +4,12 @@ const Message = require('../models/Message');
 const SecuritySession = require('../models/SecuritySession');
 const User = require('../models/User');
 
-let rawQdsUrl = process.env.QDS_SERVICE_URL || 'http://localhost:8000';
+let rawQdsUrl = process.env.QDS_SERVICE_URL;
+if (!rawQdsUrl || (rawQdsUrl.includes('localhost') && process.env.NODE_ENV === 'production')) {
+  rawQdsUrl = 'https://qchat-qds-core.onrender.com';
+} else if (!rawQdsUrl) {
+  rawQdsUrl = 'http://localhost:8000';
+}
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
   rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
 }
