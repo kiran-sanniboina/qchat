@@ -27,10 +27,7 @@ services:
       - key: MONGO_URI
         sync: false
       - key: QDS_SERVICE_URL
-        fromService:
-          type: web
-          name: qchat-qds-core
-          property: hostport
+        value: https://qchat-qds-core.onrender.com
 
   # 3. React (Vite) Frontend Static Site with Global CDN
   - type: web

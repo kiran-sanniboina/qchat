@@ -5,10 +5,10 @@ const SecuritySession = require('../models/SecuritySession');
 const User = require('../models/User');
 
 let rawQdsUrl = process.env.QDS_SERVICE_URL;
-if (!rawQdsUrl || (rawQdsUrl.includes('localhost') && process.env.NODE_ENV === 'production')) {
+if (!rawQdsUrl) {
+  rawQdsUrl = process.env.NODE_ENV === 'production' ? 'https://qchat-qds-core.onrender.com' : 'http://localhost:8000';
+} else if (rawQdsUrl === 'qchat-qds-core' || !rawQdsUrl.includes('.') || (rawQdsUrl.includes('localhost') && process.env.NODE_ENV === 'production')) {
   rawQdsUrl = 'https://qchat-qds-core.onrender.com';
-} else if (!rawQdsUrl) {
-  rawQdsUrl = 'http://localhost:8000';
 }
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
   rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
