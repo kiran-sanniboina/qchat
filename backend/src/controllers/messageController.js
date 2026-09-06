@@ -9,9 +9,9 @@ const { encryptAESGCM, sha256 } = require('../utils/cryptoHelper');
 
 let rawQdsUrl = process.env.QDS_SERVICE_URL || 'http://localhost:8000';
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
-  rawQdsUrl = `https://${rawQdsUrl}`;
+  rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
 }
-const QDS_URL = rawQdsUrl;
+const QDS_URL = rawQdsUrl.replace(/\/+$/, '');
 
 // Send a new message with QDS Signing & Verification
 exports.sendMessage = async (req, res) => {

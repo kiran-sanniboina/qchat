@@ -6,9 +6,9 @@ const Message = require('../models/Message');
 
 let rawQdsUrl = process.env.QDS_SERVICE_URL || 'http://localhost:8000';
 if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('https://')) {
-  rawQdsUrl = `https://${rawQdsUrl}`;
+  rawQdsUrl = rawQdsUrl.includes('.onrender.com') ? `https://${rawQdsUrl}` : `http://${rawQdsUrl}`;
 }
-const QDS_URL = rawQdsUrl;
+const QDS_URL = rawQdsUrl.replace(/\/+$/, '');
 
 // Get current security status & summary for a chat
 exports.getChatSecurityStatus = async (req, res) => {

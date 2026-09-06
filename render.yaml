@@ -5,8 +5,8 @@ services:
     runtime: python
     rootDir: qds-service
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -30,12 +30,7 @@ services:
         fromService:
           type: web
           name: qchat-qds-core
-          property: host
-      - key: CLIENT_URL
-        fromService:
-          type: web
-          name: qchat-frontend
-          property: host
+          property: hostport
 
   # 3. React (Vite) Frontend Static Site with Global CDN
   - type: web
@@ -50,13 +45,8 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: qchat-backend
-          property: host
+        value: https://qchat-backend.onrender.com/api
       - key: VITE_SOCKET_URL
-        fromService:
-          type: web
-          name: qchat-backend
-          property: host
+        value: https://qchat-backend.onrender.com
+
 
