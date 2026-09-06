@@ -29,6 +29,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Root and health check for Render & status probes
+@app.get("/")
+def read_root():
+    return {"status": "ok", "service": "QChat QDS Quantum Microservice", "version": "1.0.0"}
+
+@app.get("/health")
+def read_health():
+    return {"status": "healthy", "service": "QChat QDS Core"}
+
 # Enable CORS for internal services
 app.add_middleware(
     CORSMiddleware,

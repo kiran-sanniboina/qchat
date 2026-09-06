@@ -44,6 +44,15 @@ app.use('/api/security', securityRoutes);
 app.use('/api/media', mediaRoutes);
 
 // Health check
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'QChat Node.js Orchestrator Backend',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date()
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
@@ -58,23 +67,32 @@ const PORT = process.env.PORT || 5000;
 const primaryUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27018/qchat';
 const fallbackUri = 'mongodb://127.0.0.1:27018/qchat';
 
+// 1. Listen immediately so cloud platforms (Render) detect open port without delay
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Server] QChat backend listening on http://0.0.0.0:${PORT}`);
+});
+
+// 2. Connect to MongoDB in background with short timeout
 async function connectDb() {
-  try {
-    await mongoose.connect(primaryUri);
-    console.log(`[Database] MongoDB connected successfully to ${primaryUri}`);
-  } catch (err) {
-    console.warn(`[Database] Primary connection failed (${err.message}). Trying fallback: ${fallbackUri}`);
-    try {
-      await mongoose.connect(fallbackUri);
-      console.log(`[Database] Connected to fallback MongoDB at ${fallbackUri}`);
-    } catch (fallbackErr) {
-      console.error('[Database] Both primary and fallback connection failed:', fallbackErr.message);
-    }
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd && !process.env.MONGO_URI) {
+    console.warn('[Database] WARNING: MONGO_URI is not defined in production environment!');
   }
 
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Server] QChat backend listening on http://0.0.0.0:${PORT}`);
-  });
+  try {
+    await mongoose.connect(primaryUri, { serverSelectionTimeoutMS: 5000 });
+    console.log(`[Database] MongoDB connected successfully to ${primaryUri.replace(/:[^:@]+@/, ':***@')}`);
+  } catch (err) {
+    console.warn(`[Database] Primary connection failed (${err.message})`);
+    if (!isProd) {
+      try {
+        await mongoose.connect(fallbackUri, { serverSelectionTimeoutMS: 3000 });
+        console.log(`[Database] Connected to fallback MongoDB at ${fallbackUri}`);
+      } catch (fallbackErr) {
+        console.error('[Database] Both primary and fallback connection failed:', fallbackErr.message);
+      }
+    }
+  }
 }
 
 connectDb();
