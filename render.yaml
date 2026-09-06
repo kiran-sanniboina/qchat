@@ -2,7 +2,7 @@ services:
   # 1. Python FastAPI "QDS Core" Quantum Security Microservice
   - type: web
     name: qchat-qds-core
-    env: python
+    runtime: python
     rootDir: qds-service
     plan: free
     buildCommand: pip install -r requirements.txt
@@ -14,7 +14,7 @@ services:
   # 2. Node.js Express Orchestrator Backend (REST API + Socket.io)
   - type: web
     name: qchat-backend
-    env: node
+    runtime: node
     rootDir: backend
     plan: free
     buildCommand: npm install
@@ -33,16 +33,14 @@ services:
           property: host
       - key: CLIENT_URL
         fromService:
-          type: web
+          type: static
           name: qchat-frontend
           property: host
 
   # 3. React (Vite) Frontend Static Site with Global CDN
-  - type: web
+  - type: static
     name: qchat-frontend
-    env: static
     rootDir: frontend
-    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:
