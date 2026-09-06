@@ -277,6 +277,7 @@ export default function App() {
           chatId={activeChat?._id || chats[0]?._id}
           onClose={() => setShowSecurityDashboard(false)}
           securityAlerts={securityAlerts}
+          latestMessage={messages.length > 0 ? messages[messages.length - 1] : null}
         />
       )}
 

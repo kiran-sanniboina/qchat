@@ -88,6 +88,11 @@ class E91EvaluateRequest(BaseModel):
     interceptProb: Optional[float] = 0.0
     shots: Optional[int] = 600
 
+class TeleportStepRequest(BaseModel):
+    stateLabel: Optional[str] = "00"
+    perturb: Optional[bool] = False
+    perturbType: Optional[str] = None
+
 # --- Routes ---
 
 @app.get("/health")
@@ -236,6 +241,19 @@ def evaluate_e91(payload: E91EvaluateRequest):
     return evaluator.evaluate_channel(
         noise_rate=payload.noiseRate or 0.0,
         intercept_prob=payload.interceptProb or 0.0
+    )
+
+@app.post("/qds/teleport/simulate-steps")
+def simulate_teleport_steps(payload: TeleportStepRequest):
+    """
+    Simulates the exact 3-qubit teleportation circuit in progressive stages
+    for dynamic visual circuit playback in the Security Dashboard.
+    """
+    teleporter = QuantumTeleporter()
+    return teleporter.simulate_step_by_step(
+        state_label=payload.stateLabel or "00",
+        perturb_qubit=payload.perturb or False,
+        perturb_type=payload.perturbType
     )
 
 @app.get("/qds/benchmark/matrix")

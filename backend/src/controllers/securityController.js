@@ -176,3 +176,19 @@ exports.getBenchmarkMatrix = async (req, res) => {
   }
 };
 
+// Step-by-step Teleportation Circuit Simulation
+exports.simulateTeleportSteps = async (req, res) => {
+  try {
+    const { stateLabel, perturb, perturbType } = req.body;
+    const qdsRes = await axios.post(`${QDS_URL}/qds/teleport/simulate-steps`, {
+      stateLabel: stateLabel || '00',
+      perturb: Boolean(perturb),
+      perturbType
+    }, { timeout: 6000 });
+    return res.status(200).json(qdsRes.data);
+  } catch (error) {
+    console.error('Error in simulateTeleportSteps:', error);
+    return res.status(500).json({ error: 'Error simulating teleportation steps.' });
+  }
+};
+

@@ -197,3 +197,124 @@ class QuantumTeleporter:
             "fidelity": 1.0 if is_match else 0.0
         }
 
+    def simulate_step_by_step(
+        self,
+        state_label: str,
+        perturb_qubit: bool = False,
+        perturb_type: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Runs and records the exact quantum circuit execution in 6 progressive stages
+        for dynamic interactive visualization in the frontend.
+        """
+        state_names = {
+            "00": {"label": "|0⟩", "amplitudes": [1.0, 0.0], "prob0": 1.0, "prob1": 0.0, "formula": "|ψ⟩ = |0⟩"},
+            "01": {"label": "|1⟩", "amplitudes": [0.0, 1.0], "prob0": 0.0, "prob1": 1.0, "formula": "|ψ⟩ = |1⟩"},
+            "10": {"label": "|+⟩", "amplitudes": [0.7071, 0.7071], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ + |1⟩) / √2"},
+            "11": {"label": "|-⟩", "amplitudes": [0.7071, -0.7071], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ - |1⟩) / √2"}
+        }
+        state_info = state_names.get(state_label, state_names["00"])
+
+        # Run single teleportation to get real simulator outcomes
+        res = self.teleport_qubit(state_label, perturb_qubit, perturb_type)
+        c0 = int(res["classicalBits"][0])
+        c1 = int(res["classicalBits"][1])
+        corr = res["correctionApplied"]
+
+        stages = [
+            {
+                "stageIndex": 0,
+                "title": "Stage 1: State & Entanglement Preparation",
+                "activeGates": ["prep_q0", "h_q1", "cx_q1_q2"],
+                "activeWires": [0, 1, 2],
+                "description": f"Alice prepares her signature qubit q0 in state {state_info['label']}. Simultaneously, an entangled Bell pair |Φ+⟩ is generated across Alice's node (q1) and Bob's node (q2).",
+                "statevectorDescription": f"Global State: {state_info['label']} ⊗ (|00⟩ + |11⟩)/√2",
+                "qubitStates": {
+                    "q0": state_info["label"],
+                    "q1": "(|0⟩ + |1⟩)/√2",
+                    "q2": "Entangled with q1"
+                }
+            },
+            {
+                "stageIndex": 1,
+                "title": "Stage 2: Alice's Bell-Basis Interaction",
+                "activeGates": ["cx_q0_q1", "h_q0"],
+                "activeWires": [0, 1],
+                "description": "Alice performs a CNOT gate with q0 as control and q1 as target, entangling her signature with the Bell pair. She then applies a Hadamard gate to q0.",
+                "statevectorDescription": "Alice's two qubits are rotated into the Bell basis, distributing the state coefficients across all 4 computational subspaces.",
+                "qubitStates": {
+                    "q0": "Rotated (H gate)",
+                    "q1": "Entangled via CNOT",
+                    "q2": "Spookily correlated"
+                }
+            },
+            {
+                "stageIndex": 2,
+                "title": "Stage 3: Alice's Bell Measurement",
+                "activeGates": ["measure_q0", "measure_q1"],
+                "activeWires": [0, 1],
+                "description": f"Alice measures q0 and q1 in the computational basis. The wave-function collapses, yielding 2 classical bits: c0 = {c0}, c1 = {c1} (outcome '{c0}{c1}').",
+                "statevectorDescription": f"Measured Classical Bits: (c0={c0}, c1={c1}). Bob's qubit q2 collapses into Pauli-shifted state {corr}|ψ⟩.",
+                "qubitStates": {
+                    "q0": f"Collapsed to |{c0}⟩",
+                    "q1": f"Collapsed to |{c1}⟩",
+                    "q2": f"Pending Pauli correction {corr}"
+                },
+                "classicalBits": f"{c0}{c1}"
+            },
+            {
+                "stageIndex": 3,
+                "title": "Stage 4: Classical 2-Bit Channel Transmission",
+                "activeGates": ["transmit_bits"],
+                "activeWires": ["classical"],
+                "description": f"Alice transmits the 2 classical bits '{c0}{c1}' over the classical channel to Bob. Quantum information travels with zero physical matter transfer.",
+                "statevectorDescription": f"Only 2 classical bits ({c0}{c1}) travel across the wire. No physical qubit leaves Alice's station.",
+                "qubitStates": {
+                    "q0": "Destroyed (No-Cloning)",
+                    "q1": "Discarded",
+                    "q2": "Holding collapsed state"
+                },
+                "transmittingBits": f"{c0}{c1}"
+            },
+            {
+                "stageIndex": 4,
+                "title": f"Stage 5: Bob's Pauli Correction ({corr})",
+                "activeGates": [f"pauli_{corr.lower()}_q2"],
+                "activeWires": [2],
+                "description": f"Bob receives '{c0}{c1}' and consults the deterministic Pauli table. Outcome {c0}{c1} instructs Bob to apply {corr} gate to q2.",
+                "statevectorDescription": f"Pauli Operation: {corr} on Bob's qubit reconstructs original signature state {state_info['label']}.",
+                "qubitStates": {
+                    "q0": "Consumed",
+                    "q1": "Consumed",
+                    "q2": f"Corrected via {corr} → {state_info['label']}"
+                },
+                "correctionApplied": corr
+            },
+            {
+                "stageIndex": 5,
+                "title": "Stage 6: Final State Verification & Measurement",
+                "activeGates": ["bob_verify"],
+                "activeWires": [2],
+                "description": f"Bob measures q2 in the matching Pauli {res['basis']} basis. Result matches expected outcome {res['expectedOutcome']} (Fidelity = {res['fidelity'] * 100:.0f}%).",
+                "statevectorDescription": f"Final Fidelity: {res['fidelity']:.4f}. Teleported state matches Alice's original signature qubit with 0% mismatch.",
+                "qubitStates": {
+                    "q0": "Consumed",
+                    "q1": "Consumed",
+                    "q2": f"Verified {state_info['label']} (Match = {res['isMatch']})"
+                },
+                "isMatch": res["isMatch"],
+                "fidelity": res["fidelity"]
+            }
+        ]
+
+        return {
+            "stateLabel": state_label,
+            "stateInfo": state_info,
+            "classicalBits": f"{c0}{c1}",
+            "correctionApplied": corr,
+            "basis": res["basis"],
+            "isMatch": res["isMatch"],
+            "fidelity": res["fidelity"],
+            "stages": stages
+        }
+

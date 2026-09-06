@@ -14,16 +14,19 @@ import {
   Sliders,
   CheckCircle2,
   XCircle,
-  HelpCircle
+  HelpCircle,
+  Cpu
 } from 'lucide-react';
 import api from '../api';
+import TeleportationCircuitVisualizer from './TeleportationCircuitVisualizer';
 
 export default function SecurityDashboard({
   chatId,
   onClose,
-  securityAlerts = []
+  securityAlerts = [],
+  latestMessage = null
 }) {
-  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'threats' | 'simulator' | 'benchmark'
+  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'circuit' | 'threats' | 'simulator' | 'benchmark'
   const [statusData, setStatusData] = useState(null);
   const [threatLogs, setThreatLogs] = useState([]);
   const [benchmarkMatrix, setBenchmarkMatrix] = useState(null);
@@ -154,6 +157,7 @@ export default function SecurityDashboard({
       <div className="flex border-b border-wa-border bg-wa-surface/60 px-4">
         {[
           { id: 'live', label: 'E91 & QDS Live', icon: Activity },
+          { id: 'circuit', label: 'Teleportation Circuit', icon: Cpu },
           { id: 'threats', label: `Threat Feed (${threatLogs.length})`, icon: AlertTriangle },
           { id: 'simulator', label: 'Attack Simulator', icon: Zap },
           { id: 'benchmark', label: 'Experiment Matrix', icon: BarChart3 }
@@ -339,6 +343,14 @@ export default function SecurityDashboard({
                       <span className="text-wa-green font-bold">{latestVer.nonceStatus || 'VALID'}</span>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => setActiveTab('circuit')}
+                    className="w-full mt-3 py-2 bg-wa-panel hover:bg-wa-hover text-quantum-cyan border border-quantum-cyan/30 rounded text-xs font-semibold transition flex items-center justify-center gap-2 shadow"
+                  >
+                    <Cpu className="w-3.5 h-3.5" />
+                    Launch Dynamic Teleportation Circuit Simulation &rarr;
+                  </button>
                 </div>
               ) : (
                 <p className="text-xs text-wa-textSecondary italic text-center py-4">
@@ -347,6 +359,14 @@ export default function SecurityDashboard({
               )}
             </div>
           </div>
+        )}
+
+        {/* --- TAB: TELEPORTATION CIRCUIT SIMULATOR --- */}
+        {activeTab === 'circuit' && (
+          <TeleportationCircuitVisualizer
+            latestMessage={latestMessage}
+            selectedState={latestMessage?.signatureMeta?.teleportationRecords?.[0]?.inputState || '10'}
+          />
         )}
 
         {/* --- TAB 2: THREAT LOGS FEED --- */}

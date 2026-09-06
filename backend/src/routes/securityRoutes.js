@@ -8,6 +8,7 @@ router.get('/:chatId/threats', auth, securityController.getChatThreats);
 router.post('/:chatId/refresh-e91', auth, securityController.refreshE91);
 router.post('/simulate-attack', auth, securityController.simulateAttack);
 router.get('/benchmark/matrix', auth, securityController.getBenchmarkMatrix);
+router.post('/teleport/simulate-steps', auth, securityController.simulateTeleportSteps);
 
 module.exports = router;
 
