@@ -38,8 +38,15 @@ class QuantumTeleporter:
         elif state_label == "11":
             qc.x(qubit)
             qc.h(qubit)  # |->
+        elif state_label in ["+i", "Y+"]:
+            qc.h(qubit)
+            qc.s(qubit)  # |+i>
+        elif state_label in ["-i", "Y-"]:
+            qc.x(qubit)
+            qc.h(qubit)
+            qc.s(qubit)  # |-i>
         else:
-            raise ValueError(f"Unknown state label: {state_label}. Must be '00', '01', '10', or '11'.")
+            raise ValueError(f"Unknown state label: {state_label}. Must be '00', '01', '10', '11', '+i', or '-i'.")
 
     @staticmethod
     def get_ideal_statevector(state_label: str) -> Statevector:
@@ -52,6 +59,10 @@ class QuantumTeleporter:
             return Statevector([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)])
         elif state_label == "11":
             return Statevector([1.0 / np.sqrt(2), -1.0 / np.sqrt(2)])
+        elif state_label in ["+i", "Y+"]:
+            return Statevector([1.0 / np.sqrt(2), 1j / np.sqrt(2)])
+        elif state_label in ["-i", "Y-"]:
+            return Statevector([1.0 / np.sqrt(2), -1j / np.sqrt(2)])
         else:
             raise ValueError(f"Unknown state label: {state_label}")
 
@@ -158,8 +169,15 @@ class QuantumTeleporter:
         # Let's verify Bob's measurement in the matching Pauli basis:
         # If state_label is '00' (|0>) or '01' (|1>): measure in Z basis
         # If state_label is '10' (|+>) or '11' (|->): measure in X basis
-        basis = "Z" if state_label in ["00", "01"] else "X"
-        expected_measurement = 0 if state_label in ["00", "10"] else 1
+        if state_label in ["00", "01"]:
+            basis = "Z"
+            expected_measurement = 0 if state_label == "00" else 1
+        elif state_label in ["10", "11"]:
+            basis = "X"
+            expected_measurement = 0 if state_label == "10" else 1
+        else:
+            basis = "Y"
+            expected_measurement = 0 if state_label in ["+i", "Y+"] else 1
 
         # Simulate Bob measuring the corrected qubit
         bob_measure_qc = QuantumCircuit(1, 1)
@@ -178,6 +196,9 @@ class QuantumTeleporter:
                 bob_measure_qc.x(0)
 
         if basis == "X":
+            bob_measure_qc.h(0)
+        elif basis == "Y":
+            bob_measure_qc.sdg(0)
             bob_measure_qc.h(0)
         bob_measure_qc.measure(0, 0)
 
@@ -211,7 +232,9 @@ class QuantumTeleporter:
             "00": {"label": "|0⟩", "amplitudes": [1.0, 0.0], "prob0": 1.0, "prob1": 0.0, "formula": "|ψ⟩ = |0⟩"},
             "01": {"label": "|1⟩", "amplitudes": [0.0, 1.0], "prob0": 0.0, "prob1": 1.0, "formula": "|ψ⟩ = |1⟩"},
             "10": {"label": "|+⟩", "amplitudes": [0.7071, 0.7071], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ + |1⟩) / √2"},
-            "11": {"label": "|-⟩", "amplitudes": [0.7071, -0.7071], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ - |1⟩) / √2"}
+            "11": {"label": "|-⟩", "amplitudes": [0.7071, -0.7071], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ - |1⟩) / √2"},
+            "+i": {"label": "|+i⟩", "amplitudes": [0.7071, "0.7071i"], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ + i|1⟩) / √2"},
+            "-i": {"label": "|-i⟩", "amplitudes": [0.7071, "-0.7071i"], "prob0": 0.5, "prob1": 0.5, "formula": "|ψ⟩ = (|0⟩ - i|1⟩) / √2"}
         }
         state_info = state_names.get(state_label, state_names["00"])
 

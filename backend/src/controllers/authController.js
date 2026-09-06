@@ -55,7 +55,8 @@ exports.register = async (req, res) => {
         avatarUrl: user.avatarUrl,
         statusBio: user.statusBio,
         isOnline: user.isOnline,
-        lastSeen: user.lastSeen
+        lastSeen: user.lastSeen,
+        blockedUsers: user.blockedUsers || []
       }
     });
   } catch (error) {
@@ -100,7 +101,8 @@ exports.login = async (req, res) => {
         avatarUrl: user.avatarUrl,
         statusBio: user.statusBio,
         isOnline: user.isOnline,
-        lastSeen: user.lastSeen
+        lastSeen: user.lastSeen,
+        blockedUsers: user.blockedUsers || []
       }
     });
   } catch (error) {
@@ -121,7 +123,8 @@ exports.getMe = async (req, res) => {
         avatarUrl: req.user.avatarUrl,
         statusBio: req.user.statusBio,
         isOnline: req.user.isOnline,
-        lastSeen: req.user.lastSeen
+        lastSeen: req.user.lastSeen,
+        blockedUsers: req.user.blockedUsers || []
       }
     });
   } catch (error) {
@@ -151,6 +154,52 @@ exports.searchUsers = async (req, res) => {
     return res.status(200).json({ users });
   } catch (error) {
     return res.status(500).json({ error: 'Error searching users.' });
+  }
+};
+
+// Block a user
+exports.blockUser = async (req, res) => {
+  try {
+    const { targetUserId } = req.body;
+    if (!targetUserId) {
+      return res.status(400).json({ error: 'targetUserId is required.' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { blockedUsers: targetUserId } },
+      { new: true }
+    ).select('-passwordHash');
+
+    return res.status(200).json({
+      message: 'User blocked successfully.',
+      blockedUsers: updatedUser.blockedUsers
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Error blocking user.' });
+  }
+};
+
+// Unblock a user
+exports.unblockUser = async (req, res) => {
+  try {
+    const { targetUserId } = req.body;
+    if (!targetUserId) {
+      return res.status(400).json({ error: 'targetUserId is required.' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { blockedUsers: targetUserId } },
+      { new: true }
+    ).select('-passwordHash');
+
+    return res.status(200).json({
+      message: 'User unblocked successfully.',
+      blockedUsers: updatedUser.blockedUsers
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Error unblocking user.' });
   }
 };
 

@@ -146,12 +146,20 @@ export default function App() {
       }
     };
 
+    // Chat cleared handler
+    const handleChatCleared = (data) => {
+      if (activeChat && activeChat._id === data.chatId && data.userId === currentUser.id) {
+        setMessages([]);
+      }
+    };
+
     socket.on('message:new', handleNewMessage);
     socket.on('message:status', handleMessageStatus);
     socket.on('presence:update', handlePresenceUpdate);
     socket.on('typing:status', handleTypingStatus);
     socket.on('security:alert', handleSecurityAlert);
     socket.on('channel:update', handleChannelUpdate);
+    socket.on('chat:cleared', handleChatCleared);
 
     return () => {
       if (activeChat) {
@@ -163,8 +171,23 @@ export default function App() {
       socket.off('typing:status', handleTypingStatus);
       socket.off('security:alert', handleSecurityAlert);
       socket.off('channel:update', handleChannelUpdate);
+      socket.off('chat:cleared', handleChatCleared);
     };
   }, [currentUser, activeChat]);
+
+  const handleUpdateCurrentUser = (updatedFields) => {
+    setCurrentUser((prev) => {
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem('qchat_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleClearMessages = (chatId) => {
+    if (activeChat?._id === chatId) {
+      setMessages([]);
+    }
+  };
 
   // Send message action
   const handleSendMessage = async ({ message, mediaUrl, mediaType, mediaFilename, simulateAttack }) => {
@@ -252,6 +275,8 @@ export default function App() {
           onSendMessage={handleSendMessage}
           onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
           onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
+          onUpdateCurrentUser={handleUpdateCurrentUser}
+          onClearChat={handleClearMessages}
         />
       ) : (
         <div className="flex-1 h-full bg-wa-surface flex flex-col items-center justify-center p-8 text-center select-none border-b-[6px] border-wa-green">

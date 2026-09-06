@@ -1,5 +1,6 @@
 const axios = require('axios');
 const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 const SecuritySession = require('../models/SecuritySession');
 const User = require('../models/User');
 
@@ -155,4 +156,45 @@ exports.getChatById = async (req, res) => {
     return res.status(500).json({ error: 'Server error fetching chat.' });
   }
 };
+
+// Clear chat messages for the current user
+exports.clearChatMessages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user._id;
+
+    const chat = await Chat.findById(id);
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found.' });
+    }
+
+    const isParticipant = chat.participants.some(
+      p => p.toString() === currentUserId.toString()
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Unauthorized. Not a participant in this chat.' });
+    }
+
+    // Add current user to deletedForUsers for all messages in this chat
+    await Message.updateMany(
+      { chatId: id },
+      { $addToSet: { deletedForUsers: currentUserId } }
+    );
+
+    // Emit socket event if active
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat:${id}`).emit('chat:cleared', {
+        chatId: id,
+        userId: currentUserId.toString()
+      });
+    }
+
+    return res.status(200).json({ message: 'Chat cleared successfully.' });
+  } catch (error) {
+    console.error('Error clearing chat messages:', error);
+    return res.status(500).json({ error: 'Server error clearing chat.' });
+  }
+};
+
 

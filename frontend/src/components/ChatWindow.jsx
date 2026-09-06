@@ -15,7 +15,13 @@ import {
   Lock,
   Download,
   Info,
-  Zap
+  Zap,
+  MoreVertical,
+  Trash2,
+  Ban,
+  UserCheck,
+  X,
+  AlertCircle
 } from 'lucide-react';
 import api from '../api';
 
@@ -26,14 +32,33 @@ export default function ChatWindow({
   typingStatus,
   onSendMessage,
   onOpenSecurityDashboard,
-  onSelectMessageVerification
+  onSelectMessageVerification,
+  onUpdateCurrentUser,
+  onClearChat
 }) {
   const [inputText, setInputText] = useState('');
   const [selectedAttack, setSelectedAttack] = useState(''); // '' for normal
   const [uploading, setUploading] = useState(false);
   const [showAttackPicker, setShowAttackPicker] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const menuRef = useRef(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,6 +115,53 @@ export default function ChatWindow({
   const otherParticipant = activeChat?.isGroup
     ? null
     : activeChat?.participants?.find((p) => p._id !== currentUser.id);
+
+  const isContactBlocked = Boolean(
+    !activeChat?.isGroup &&
+    otherParticipant &&
+    currentUser?.blockedUsers?.some(
+      (id) => (id._id || id).toString() === otherParticipant._id.toString()
+    )
+  );
+
+  const handleClearChat = async () => {
+    try {
+      setClearing(true);
+      await api.put(`/chats/${activeChat._id}/clear`);
+      if (onClearChat) {
+        onClearChat(activeChat._id);
+      }
+      setShowClearModal(false);
+      setShowMenu(false);
+    } catch (err) {
+      alert('Failed to clear chat: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    if (!otherParticipant) return;
+    try {
+      setBlocking(true);
+      if (isContactBlocked) {
+        const res = await api.post('/auth/unblock', { targetUserId: otherParticipant._id });
+        if (onUpdateCurrentUser) {
+          onUpdateCurrentUser({ blockedUsers: res.data.blockedUsers });
+        }
+      } else {
+        const res = await api.post('/auth/block', { targetUserId: otherParticipant._id });
+        if (onUpdateCurrentUser) {
+          onUpdateCurrentUser({ blockedUsers: res.data.blockedUsers });
+        }
+      }
+      setShowMenu(false);
+    } catch (err) {
+      alert('Action failed: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setBlocking(false);
+    }
+  };
 
   const title = activeChat?.isGroup ? activeChat.name : (otherParticipant?.name || 'Unknown User');
   const avatar = activeChat?.isGroup
@@ -190,6 +262,58 @@ export default function ChatWindow({
             <ShieldCheck className="w-5 h-5 text-wa-green" />
             <span className="hidden md:inline text-white">Security Panel</span>
           </button>
+
+          {/* Options Dropdown Menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              title="More options"
+              className={`p-2 rounded-full transition ${
+                showMenu ? 'bg-wa-hover text-white' : 'hover:bg-wa-hover text-wa-textSecondary hover:text-white'
+              }`}
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-11 w-48 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95">
+                <button
+                  onClick={() => {
+                    setShowClearModal(true);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                >
+                  <Trash2 className="w-4 h-4 text-wa-textSecondary" />
+                  <span>Clear Chat</span>
+                </button>
+
+                {!activeChat?.isGroup && (
+                  <button
+                    onClick={handleToggleBlock}
+                    disabled={blocking}
+                    className={`w-full px-4 py-2.5 text-left text-xs flex items-center gap-2.5 transition ${
+                      isContactBlocked
+                        ? 'text-wa-green hover:bg-wa-hover'
+                        : 'text-red-400 hover:bg-wa-hover'
+                    }`}
+                  >
+                    {isContactBlocked ? (
+                      <>
+                        <UserCheck className="w-4 h-4 text-wa-green" />
+                        <span>Unblock Contact</span>
+                      </>
+                    ) : (
+                      <>
+                        <Ban className="w-4 h-4 text-red-400" />
+                        <span>Block Contact</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -360,63 +484,116 @@ export default function ChatWindow({
         </div>
       )}
 
-      {/* Message Input Bar */}
-      <div className="h-16 px-4 bg-wa-surface flex items-center space-x-3 border-t border-wa-border shrink-0">
-        {/* Attack Demo Toggle */}
-        <button
-          type="button"
-          onClick={() => setShowAttackPicker(!showAttackPicker)}
-          title="Demo Attack Simulator"
-          className={`p-2 rounded-full transition flex items-center gap-1 ${
-            selectedAttack
-              ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-              : 'hover:bg-wa-hover text-wa-textSecondary hover:text-amber-400'
-          }`}
-        >
-          <Zap className="w-5 h-5" />
-        </button>
-
-        {/* Attachment Upload Button */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          title="Attach Image or Document"
-          className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition disabled:opacity-50"
-        >
-          <Paperclip className="w-5 h-5" />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          className="hidden"
-          accept="image/*,.pdf,.doc,.docx,.txt"
-        />
-
-        {/* Text Input Form */}
-        <form onSubmit={handleSend} className="flex-1 flex items-center space-x-2">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder={
+      {/* Blocked Contact Warning Bar or Input Bar */}
+      {isContactBlocked ? (
+        <div className="h-16 px-6 bg-red-950/40 border-t border-red-500/40 flex items-center justify-between shrink-0 animate-in fade-in">
+          <div className="flex items-center gap-2.5 text-xs text-red-200">
+            <Ban className="w-5 h-5 text-red-400 shrink-0" />
+            <span>You have blocked this contact. Unblock to send messages.</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleBlock}
+            disabled={blocking}
+            className="px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 hover:text-white rounded-lg text-xs font-semibold transition"
+          >
+            {blocking ? 'Updating...' : 'Unblock Contact'}
+          </button>
+        </div>
+      ) : (
+        /* Message Input Bar */
+        <div className="h-16 px-4 bg-wa-surface flex items-center space-x-3 border-t border-wa-border shrink-0">
+          {/* Attack Demo Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAttackPicker(!showAttackPicker)}
+            title="Demo Attack Simulator"
+            className={`p-2 rounded-full transition flex items-center gap-1 ${
               selectedAttack
-                ? `Type message (will simulate ${selectedAttack})...`
-                : 'Type a message (secured by QDS)...'
-            }
-            className="w-full bg-wa-panel border border-wa-border rounded-lg px-4 py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition"
+                ? 'bg-red-500/20 text-red-400 border border-red-500/50'
+                : 'hover:bg-wa-hover text-wa-textSecondary hover:text-amber-400'
+            }`}
+          >
+            <Zap className="w-5 h-5" />
+          </button>
+
+          {/* Attachment Upload Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            title="Attach Image or Document"
+            className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition disabled:opacity-50"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.txt"
           />
 
-          <button
-            type="submit"
-            disabled={!inputText.trim()}
-            className="p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </form>
-      </div>
+          {/* Text Input Form */}
+          <form onSubmit={handleSend} className="flex-1 flex items-center space-x-2">
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder={
+                selectedAttack
+                  ? `Type message (will simulate ${selectedAttack})...`
+                  : 'Type a message (secured by QDS)...'
+              }
+              className="w-full bg-wa-panel border border-wa-border rounded-lg px-4 py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition"
+            />
+
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className="p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Clear Chat Confirmation Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-wa-surface border border-wa-border max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="text-base font-bold text-white">Clear this chat?</h3>
+              <p className="text-xs text-wa-textSecondary leading-relaxed">
+                Messages will be removed for your account. This will not affect other participants in this chat.
+              </p>
+            </div>
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                disabled={clearing}
+                className="px-4 py-2 bg-wa-panel hover:bg-wa-hover text-white text-xs font-semibold rounded-lg transition border border-wa-border"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearChat}
+                disabled={clearing}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition shadow-md flex items-center gap-1.5"
+              >
+                {clearing ? 'Clearing...' : 'Clear Chat'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

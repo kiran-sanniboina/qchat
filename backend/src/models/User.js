@@ -38,7 +38,11 @@ const userSchema = new mongoose.Schema({
   isOnline: {
     type: Boolean,
     default: false,
-  }
+  },
+  blockedUsers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });

@@ -2,6 +2,7 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
+const User = require('../models/User');
 const ThreatLog = require('../models/ThreatLog');
 const NonceRegistry = require('../models/NonceRegistry');
 const { encryptAESGCM, sha256 } = require('../utils/cryptoHelper');
@@ -45,6 +46,19 @@ exports.sendMessage = async (req, res) => {
     const recipientId = chat.participants.find(
       p => p.toString() !== senderId.toString()
     ) || senderId;
+
+    // Check if communication is blocked between participants
+    if (!chat.isGroup && recipientId.toString() !== senderId.toString()) {
+      const recipientUser = await User.findById(recipientId);
+      if (recipientUser && recipientUser.blockedUsers && recipientUser.blockedUsers.some(id => id.toString() === senderId.toString())) {
+        return res.status(403).json({ error: 'You cannot send messages to this contact because you have been blocked.' });
+      }
+
+      const senderUser = await User.findById(senderId);
+      if (senderUser && senderUser.blockedUsers && senderUser.blockedUsers.some(id => id.toString() === recipientId.toString())) {
+        return res.status(403).json({ error: 'You have blocked this contact. Unblock to send messages.' });
+      }
+    }
 
     const payloadText = message || `[Media: ${mediaType}]`;
     const sessionId = chat.activeSessionId || `qds_sess_${chat._id.toString()}`;
