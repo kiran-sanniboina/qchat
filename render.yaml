@@ -33,13 +33,14 @@ services:
           property: host
       - key: CLIENT_URL
         fromService:
-          type: static
+          type: web
           name: qchat-frontend
           property: host
 
   # 3. React (Vite) Frontend Static Site with Global CDN
-  - type: static
+  - type: web
     name: qchat-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
