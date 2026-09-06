@@ -55,7 +55,6 @@ services:
           type: web
           name: qchat-backend
           property: host
-          path: /api
       - key: VITE_SOCKET_URL
         fromService:
           type: web

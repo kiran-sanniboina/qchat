@@ -4,6 +4,7 @@ let rawSocketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 if (rawSocketUrl && !rawSocketUrl.startsWith('http://') && !rawSocketUrl.startsWith('https://')) {
   rawSocketUrl = `https://${rawSocketUrl}`;
 }
+rawSocketUrl = rawSocketUrl.replace(/\/+$/, '').replace(/\/api$/, '');
 const SOCKET_URL = rawSocketUrl;
 
 let socket = null;
