@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 
 const generateToken = (userId) => {
@@ -13,6 +14,11 @@ const generateToken = (userId) => {
 // Register new user
 exports.register = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database not connected. Please add your MONGO_URI in Render Environment variables.'
+      });
+    }
     const { name, email, password, avatarUrl, statusBio } = req.body;
 
     if (!name || !email || !password) {
@@ -68,6 +74,11 @@ exports.register = async (req, res) => {
 // Login user
 exports.login = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database not connected. Please add your MONGO_URI in Render Environment variables.'
+      });
+    }
     const { email, password } = req.body;
 
     if (!email || !password) {
