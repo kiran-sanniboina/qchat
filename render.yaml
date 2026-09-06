@@ -45,8 +45,8 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://qchat-backend.onrender.com/api
+        value: https://qchat-backend-8tbz.onrender.com/api
       - key: VITE_SOCKET_URL
-        value: https://qchat-backend.onrender.com
+        value: https://qchat-backend-8tbz.onrender.com
 
 

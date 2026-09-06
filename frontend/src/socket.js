@@ -1,6 +1,11 @@
 import { io } from 'socket.io-client';
 
-let rawSocketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+let rawSocketUrl = import.meta.env.VITE_SOCKET_URL;
+if (!rawSocketUrl || rawSocketUrl.includes('qchat-backend.onrender.com')) {
+  rawSocketUrl = 'https://qchat-backend-8tbz.onrender.com';
+} else if (rawSocketUrl.includes('localhost') && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+  rawSocketUrl = 'https://qchat-backend-8tbz.onrender.com';
+}
 if (rawSocketUrl && !rawSocketUrl.startsWith('http://') && !rawSocketUrl.startsWith('https://')) {
   rawSocketUrl = `https://${rawSocketUrl}`;
 }

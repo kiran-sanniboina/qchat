@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-let rawBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+let rawBase = import.meta.env.VITE_API_URL;
+if (!rawBase || rawBase.includes('qchat-backend.onrender.com')) {
+  rawBase = 'https://qchat-backend-8tbz.onrender.com/api';
+} else if (rawBase.includes('localhost') && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+  rawBase = 'https://qchat-backend-8tbz.onrender.com/api';
+}
 if (rawBase && !rawBase.startsWith('http://') && !rawBase.startsWith('https://')) {
   rawBase = `https://${rawBase}`;
 }
