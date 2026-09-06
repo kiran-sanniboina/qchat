@@ -97,5 +97,30 @@ async function connectDb() {
 
 connectDb();
 
+// 3. Keep-alive heartbeat to keep Render free-tier containers warm & responsive
+function startKeepAlive() {
+  const axios = require('axios');
+  const qdsUrl = process.env.NODE_ENV === 'production' ? 'https://qchat-qds-core.onrender.com' : 'http://localhost:8000';
+  
+  const pingQds = async () => {
+    try {
+      await axios.get(`${qdsUrl}/health`, { timeout: 15000 });
+      console.log('[Heartbeat] Pinged QDS microservice keep-alive successfully');
+    } catch (e) {
+      console.warn('[Heartbeat] QDS keep-alive ping status:', e.message);
+    }
+  };
+
+  // Trigger initial warmup after 5 seconds
+  setTimeout(pingQds, 5000);
+
+  // Ping every 10 minutes to prevent Render 15-min idle spin down
+  setInterval(pingQds, 10 * 60 * 1000);
+}
+
+if (process.env.NODE_ENV === 'production') {
+  startKeepAlive();
+}
+
 module.exports = { app, server };
 

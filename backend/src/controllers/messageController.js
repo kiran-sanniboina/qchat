@@ -135,7 +135,7 @@ exports.sendMessage = async (req, res) => {
         isSignerValid: (simulateAttack !== 'IMPERSONATION'),
         isVerifierAuthorized: (simulateAttack !== 'UNAUTHORIZED_VERIFICATION'),
         simulateAttack: simulateAttack || null
-      }, { timeout: 25000 });
+      }, { timeout: 65000 });
       verification = verifyRes.data;
     } catch (qdsVerifyErr) {
       console.warn('QDS Verify fallback:', qdsVerifyErr.message);

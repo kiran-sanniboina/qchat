@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   XCircle,
   HelpCircle,
-  Cpu
+  Cpu,
+  Loader2
 } from 'lucide-react';
 import api from '../api';
 import TeleportationCircuitVisualizer from './TeleportationCircuitVisualizer';
@@ -36,6 +37,7 @@ export default function SecurityDashboard({
   const [interceptProb, setInterceptProb] = useState(0.0);
   const [simulatingAttack, setSimulatingAttack] = useState(null);
   const [simFeedback, setSimFeedback] = useState(null);
+  const [simError, setSimError] = useState(null);
 
   // Fetch status and threat logs
   const fetchSecurityData = async () => {
@@ -89,6 +91,7 @@ export default function SecurityDashboard({
   const handleTriggerAttack = async (attackType) => {
     setSimulatingAttack(attackType);
     setSimFeedback(null);
+    setSimError(null);
     try {
       const res = await api.post('/security/simulate-attack', {
         chatId,
@@ -100,7 +103,8 @@ export default function SecurityDashboard({
       setSimFeedback(sim);
       fetchSecurityData();
     } catch (err) {
-      alert('Simulation error: ' + err.message);
+      const errMsg = err.response?.data?.error || err.message;
+      setSimError(errMsg);
     } finally {
       setSimulatingAttack(null);
     }
@@ -474,25 +478,64 @@ export default function SecurityDashboard({
                   title: 'Classical Tampering',
                   desc: 'Adversary flips bits in the AES-GCM ciphertext. Caught by SHA-256 hash check.'
                 }
-              ].map((att) => (
-                <button
-                  key={att.id}
-                  onClick={() => handleTriggerAttack(att.id)}
-                  disabled={simulatingAttack === att.id}
-                  className="p-3.5 bg-wa-surface hover:bg-wa-hover border border-wa-border hover:border-red-500/50 rounded-xl text-left transition group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-white group-hover:text-red-300">
-                      {att.title}
-                    </span>
-                    <span className="text-[10px] text-red-400 font-mono font-semibold">TEST &rarr;</span>
-                  </div>
-                  <p className="text-[11px] text-wa-textSecondary leading-snug">
-                    {att.desc}
-                  </p>
-                </button>
-              ))}
+              ].map((att) => {
+                const isCurrent = simulatingAttack === att.id;
+                return (
+                  <button
+                    key={att.id}
+                    onClick={() => handleTriggerAttack(att.id)}
+                    disabled={Boolean(simulatingAttack)}
+                    className={`p-3.5 bg-wa-surface hover:bg-wa-hover border rounded-xl text-left transition group ${
+                      isCurrent
+                        ? 'border-red-500 bg-red-950/30 ring-1 ring-red-500/50'
+                        : 'border-wa-border hover:border-red-500/50'
+                    } disabled:opacity-60 disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-white group-hover:text-red-300">
+                        {att.title}
+                      </span>
+                      {isCurrent ? (
+                        <span className="text-[10px] text-red-400 font-mono font-semibold flex items-center gap-1.5">
+                          <Loader2 className="w-3 h-3 animate-spin" /> RUNNING...
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-red-400 font-mono font-semibold">TEST &rarr;</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-wa-textSecondary leading-snug">
+                      {att.desc}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* In-Flight Simulation Progress Banner */}
+            {simulatingAttack && (
+              <div className="p-3.5 bg-quantum-cyan/10 border border-quantum-cyan/40 rounded-xl text-xs text-quantum-cyan flex items-start gap-3 animate-pulse">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-white">
+                    Simulating Threat: <span className="text-quantum-cyan">{simulatingAttack}</span>
+                  </div>
+                  <div className="text-[11px] text-wa-textSecondary mt-0.5 leading-relaxed">
+                    Executing Qiskit Aer quantum circuits, Bell measurements, and deterministic rule evaluation. (If microservice is waking from idle, cold start takes ~20–40s).
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Simulation Error Alert */}
+            {simError && (
+              <div className="p-3.5 bg-red-950/60 border border-red-500/60 rounded-xl text-xs text-red-200 flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-bold text-red-300">Simulation Error</strong>
+                  <p className="mt-0.5 text-[11px] text-red-200/90">{simError}</p>
+                </div>
+              </div>
+            )}
 
             {/* Simulation Feedback Card */}
             {simFeedback && (

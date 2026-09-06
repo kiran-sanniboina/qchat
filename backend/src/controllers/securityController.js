@@ -84,7 +84,7 @@ exports.refreshE91 = async (req, res) => {
         noiseRate: noiseRate || 0.0,
         interceptProb: interceptProb || 0.0,
         shots: 600
-      }, { timeout: 5000 });
+      }, { timeout: 65000 });
       e91Result = qdsRes.data;
     } catch (e) {
       console.warn('Fallback local E91 evaluate:', e.message);
@@ -135,7 +135,7 @@ exports.simulateAttack = async (req, res) => {
       chatId: chatId || 'demo_chat',
       attackType,
       sampleMessage: sampleMessage || 'Unauthorized transfer of funds'
-    }, { timeout: 25000 });
+    }, { timeout: 65000 });
 
     const simResult = qdsRes.data;
 
@@ -179,7 +179,7 @@ exports.simulateAttack = async (req, res) => {
 // Get benchmark experiment matrix
 exports.getBenchmarkMatrix = async (req, res) => {
   try {
-    const qdsRes = await axios.get(`${QDS_URL}/qds/benchmark/matrix`, { timeout: 25000 });
+    const qdsRes = await axios.get(`${QDS_URL}/qds/benchmark/matrix`, { timeout: 65000 });
     return res.status(200).json(qdsRes.data);
   } catch (error) {
     console.error('Error fetching benchmark matrix:', error.message);
@@ -195,7 +195,7 @@ exports.simulateTeleportSteps = async (req, res) => {
       stateLabel: stateLabel || '00',
       perturb: Boolean(perturb),
       perturbType
-    }, { timeout: 25000 });
+    }, { timeout: 65000 });
     return res.status(200).json(qdsRes.data);
   } catch (error) {
     console.error('Error in simulateTeleportSteps:', error.message);

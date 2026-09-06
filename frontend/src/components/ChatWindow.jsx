@@ -21,7 +21,8 @@ import {
   Ban,
   UserCheck,
   X,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import api from '../api';
 
@@ -44,6 +45,7 @@ export default function ChatWindow({
   const [showClearModal, setShowClearModal] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -68,18 +70,29 @@ export default function ChatWindow({
     scrollToBottom();
   }, [messages, typingStatus]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || sending) return;
 
-    onSendMessage({
-      message: inputText.trim(),
-      simulateAttack: selectedAttack || undefined
-    });
+    const messageText = inputText.trim();
+    const attackSim = selectedAttack || undefined;
 
+    setSending(true);
     setInputText('');
     setSelectedAttack('');
     setShowAttackPicker(false);
+
+    try {
+      await onSendMessage({
+        message: messageText,
+        simulateAttack: attackSim
+      });
+    } catch (err) {
+      setInputText(messageText);
+      if (attackSim) setSelectedAttack(attackSim);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -551,10 +564,14 @@ export default function ChatWindow({
 
             <button
               type="submit"
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || sending}
               className="p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
             >
-              <Send className="w-5 h-5" />
+              {sending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
             </button>
           </form>
         </div>
