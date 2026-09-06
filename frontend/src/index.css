@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-wa-bg text-wa-textPrimary font-sans antialiased select-none overflow-hidden;
+  }
+}
+
+/* Custom scrollbar matching WhatsApp Web */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(134, 150, 160, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 150, 160, 0.4);
+}
+
+/* WhatsApp chat background doodle pattern overlay */
+.wa-chat-bg {
+  background-color: #0b141a;
+  background-image: radial-gradient(#182229 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Quantum pulse glow animations */
+@keyframes quantum-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.4), 0 0 20px rgba(121, 40, 202, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(0, 242, 254, 0.7), 0 0 30px rgba(121, 40, 202, 0.4);
+  }
+}
+
+.quantum-glow {
+  animation: quantum-pulse 2.5s infinite ease-in-out;
+}
+
+@keyframes threat-flash {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+}
+
+.threat-pulse {
+  animation: threat-flash 1.2s infinite ease-in-out;
+}

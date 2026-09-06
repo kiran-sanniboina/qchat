@@ -1,0 +1,14 @@
+{
+  "name": "qchat-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WhatsApp Web-style Messenger secured by Quantum Digital Signatures",
+  "scripts": {
+    "test:qds": "cd qds-service && python -m pytest test_qds_core.py -v",
+    "start:qds": "cd qds-service && uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build"
+  }
+}
+

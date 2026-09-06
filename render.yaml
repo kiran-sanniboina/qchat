@@ -1,0 +1,63 @@
+services:
+  # 1. Python FastAPI "QDS Core" Quantum Security Microservice
+  - type: web
+    name: qchat-qds-core
+    env: python
+    rootDir: qds-service
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+  # 2. Node.js Express Orchestrator Backend (REST API + Socket.io)
+  - type: web
+    name: qchat-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+      - key: QDS_SERVICE_URL
+        fromService:
+          type: web
+          name: qchat-qds-core
+          property: host
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: qchat-frontend
+          property: host
+
+  # 3. React (Vite) Frontend Static Site with Global CDN
+  - type: web
+    name: qchat-frontend
+    env: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: qchat-backend
+          property: host
+          path: /api
+      - key: VITE_SOCKET_URL
+        fromService:
+          type: web
+          name: qchat-backend
+          property: host

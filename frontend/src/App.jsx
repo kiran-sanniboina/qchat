@@ -1,0 +1,304 @@
+import React, { useState, useEffect, useRef } from 'react';
+import api from './api';
+import { getSocket, disconnectSocket } from './socket';
+import AuthModal from './components/AuthModal';
+import Sidebar from './components/Sidebar';
+import ChatWindow from './components/ChatWindow';
+import SecurityDashboard from './components/SecurityDashboard';
+import NewChatModal from './components/NewChatModal';
+import VerificationDetailModal from './components/VerificationDetailModal';
+import { ShieldAlert, AlertTriangle } from 'lucide-react';
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('qchat_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [typingStatus, setTypingStatus] = useState(null);
+  const [securityAlerts, setSecurityAlerts] = useState([]);
+  const [activeToast, setActiveToast] = useState(null);
+
+  // Modals state
+  const [showSecurityDashboard, setShowSecurityDashboard] = useState(false);
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const [selectedMessageForVer, setSelectedMessageForVer] = useState(null);
+
+  // Fetch chats on mount / auth change
+  const fetchChats = async () => {
+    try {
+      const res = await api.get('/chats');
+      setChats(res.data.chats || []);
+      // If no active chat, select first if available
+      if (res.data.chats && res.data.chats.length > 0 && !activeChat) {
+        setActiveChat(res.data.chats[0]);
+      }
+    } catch (err) {
+      console.error('Error fetching chats:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchChats();
+    }
+  }, [currentUser]);
+
+  // Fetch messages when activeChat changes
+  useEffect(() => {
+    if (!activeChat) {
+      setMessages([]);
+      return;
+    }
+
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/chats/${activeChat._id}/messages`);
+        setMessages(res.data.messages || []);
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+      }
+    };
+
+    fetchMessages();
+
+    // Mark as read
+    api.put(`/chats/${activeChat._id}/read`).catch(() => {});
+  }, [activeChat]);
+
+  // Socket.io Real-time setup
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Join active chat room
+    if (activeChat) {
+      socket.emit('chat:join', { chatId: activeChat._id });
+    }
+
+    // New message handler
+    const handleNewMessage = (newMsg) => {
+      if (activeChat && newMsg.chatId === activeChat._id) {
+        setMessages((prev) => [...prev, newMsg]);
+      }
+
+      // Update chats list lastMessage
+      setChats((prevChats) =>
+        prevChats.map((c) =>
+          c._id === newMsg.chatId
+            ? { ...c, lastMessage: newMsg, updatedAt: new Date() }
+            : c
+        )
+      );
+    };
+
+    // Message status handler
+    const handleMessageStatus = (data) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === data.messageId
+            ? { ...m, deliveryState: data.deliveryState }
+            : m
+        )
+      );
+    };
+
+    // Presence update handler
+    const handlePresenceUpdate = (data) => {
+      setChats((prevChats) =>
+        prevChats.map((c) => ({
+          ...c,
+          participants: c.participants.map((p) =>
+            p._id === data.userId ? { ...p, isOnline: data.isOnline } : p
+          )
+        }))
+      );
+    };
+
+    // Typing status handler
+    const handleTypingStatus = (data) => {
+      setTypingStatus(data);
+    };
+
+    // Security alert handler
+    const handleSecurityAlert = (alert) => {
+      setSecurityAlerts((prev) => [alert, ...prev]);
+      setActiveToast(alert);
+      setTimeout(() => {
+        setActiveToast(null);
+      }, 6000);
+    };
+
+    // Channel update handler
+    const handleChannelUpdate = (data) => {
+      setChats((prev) =>
+        prev.map((c) =>
+          c._id === data.chatId ? { ...c, e91Status: data.e91Status } : c
+        )
+      );
+      if (activeChat && activeChat._id === data.chatId) {
+        setActiveChat((prev) => ({ ...prev, e91Status: data.e91Status }));
+      }
+    };
+
+    socket.on('message:new', handleNewMessage);
+    socket.on('message:status', handleMessageStatus);
+    socket.on('presence:update', handlePresenceUpdate);
+    socket.on('typing:status', handleTypingStatus);
+    socket.on('security:alert', handleSecurityAlert);
+    socket.on('channel:update', handleChannelUpdate);
+
+    return () => {
+      if (activeChat) {
+        socket.emit('chat:leave', { chatId: activeChat._id });
+      }
+      socket.off('message:new', handleNewMessage);
+      socket.off('message:status', handleMessageStatus);
+      socket.off('presence:update', handlePresenceUpdate);
+      socket.off('typing:status', handleTypingStatus);
+      socket.off('security:alert', handleSecurityAlert);
+      socket.off('channel:update', handleChannelUpdate);
+    };
+  }, [currentUser, activeChat]);
+
+  // Send message action
+  const handleSendMessage = async ({ message, mediaUrl, mediaType, mediaFilename, simulateAttack }) => {
+    if (!activeChat) return;
+
+    try {
+      await api.post('/messages', {
+        chatId: activeChat._id,
+        message,
+        mediaUrl,
+        mediaType,
+        mediaFilename,
+        simulateAttack
+      });
+    } catch (err) {
+      alert('Failed to send quantum message: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('qchat_token');
+    localStorage.removeItem('qchat_user');
+    disconnectSocket();
+    setCurrentUser(null);
+    setChats([]);
+    setActiveChat(null);
+    setMessages([]);
+  };
+
+  if (!currentUser) {
+    return <AuthModal onAuthSuccess={(user) => setCurrentUser(user)} />;
+  }
+
+  return (
+    <div className="flex h-screen w-screen bg-wa-bg overflow-hidden relative">
+      {/* Real-Time Security Alert Toast */}
+      {activeToast && (
+        <div className="fixed top-4 right-4 z-50 max-w-md p-4 bg-red-950/90 border-2 border-red-500 rounded-xl shadow-2xl animate-in slide-in-from-top-4 flex items-start gap-3">
+          <div className="p-2 rounded-full bg-red-500/20 text-red-400 shrink-0">
+            <ShieldAlert className="w-6 h-6 text-red-400" />
+          </div>
+          <div className="flex-1 text-xs text-red-100">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold uppercase tracking-wider text-red-300">
+                ⚠️ Quantum Alert: {activeToast.attackType}
+              </span>
+              <button
+                onClick={() => setActiveToast(null)}
+                className="text-red-400 hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="leading-snug">{activeToast.reason}</p>
+            <button
+              onClick={() => {
+                setShowSecurityDashboard(true);
+                setActiveToast(null);
+              }}
+              className="mt-2 text-[11px] text-quantum-cyan hover:underline font-bold"
+            >
+              Open Threat Inspector &rarr;
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main WhatsApp Web Shell */}
+      <Sidebar
+        currentUser={currentUser}
+        chats={chats}
+        activeChat={activeChat}
+        onSelectChat={(chat) => setActiveChat(chat)}
+        onOpenNewChatModal={() => setShowNewChatModal(true)}
+        onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
+        onLogout={handleLogout}
+      />
+
+      {activeChat ? (
+        <ChatWindow
+          activeChat={activeChat}
+          currentUser={currentUser}
+          messages={messages}
+          typingStatus={typingStatus}
+          onSendMessage={handleSendMessage}
+          onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
+          onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
+        />
+      ) : (
+        <div className="flex-1 h-full bg-wa-surface flex flex-col items-center justify-center p-8 text-center select-none border-b-[6px] border-wa-green">
+          <div className="w-24 h-24 rounded-full bg-wa-panel border border-wa-border flex items-center justify-center text-quantum-cyan mb-4 shadow-xl">
+            <AlertTriangle className="w-12 h-12 text-wa-green" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">QChat Web for Desktop</h2>
+          <p className="text-xs text-wa-textSecondary max-w-sm leading-relaxed mb-6">
+            Send and receive quantum-signed messages without keeping your phone online. Secured with Simulated Teleportation QDS and Dynamic E91 Bell Entanglement.
+          </p>
+          <button
+            onClick={() => setShowNewChatModal(true)}
+            className="px-4 py-2 bg-wa-green hover:bg-wa-greenHover text-white font-semibold rounded-lg text-xs shadow-md transition"
+          >
+            Start a Quantum Chat
+          </button>
+        </div>
+      )}
+
+      {/* Security & Threat Dashboard Side Drawer */}
+      {showSecurityDashboard && (
+        <SecurityDashboard
+          chatId={activeChat?._id || chats[0]?._id}
+          onClose={() => setShowSecurityDashboard(false)}
+          securityAlerts={securityAlerts}
+        />
+      )}
+
+      {/* New Chat Modal */}
+      {showNewChatModal && (
+        <NewChatModal
+          currentUser={currentUser}
+          onClose={() => setShowNewChatModal(false)}
+          onChatCreated={(newChat) => {
+            setChats((prev) => [newChat, ...prev.filter((c) => c._id !== newChat._id)]);
+            setActiveChat(newChat);
+          }}
+        />
+      )}
+
+      {/* Deep Dive QDS Verification Detail Modal */}
+      {selectedMessageForVer && (
+        <VerificationDetailModal
+          message={selectedMessageForVer}
+          onClose={() => setSelectedMessageForVer(null)}
+        />
+      )}
+    </div>
+  );
+}
