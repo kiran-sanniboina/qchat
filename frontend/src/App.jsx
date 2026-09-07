@@ -338,6 +338,7 @@ export default function App() {
             onUpdateCurrentUser={handleUpdateCurrentUser}
             onClearChat={handleClearMessages}
             onOpenChatProfile={() => setShowChatProfileModal(true)}
+            onOpenUserProfile={() => setShowUserProfileModal(true)}
             onOpenBackup={(chat) => {
               setChatForBackup(chat || activeChat);
               setShowChatBackupModal(true);

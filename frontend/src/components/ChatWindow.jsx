@@ -28,7 +28,8 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Search,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Settings
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
@@ -47,6 +48,7 @@ export default function ChatWindow({
   onUpdateCurrentUser,
   onClearChat,
   onOpenChatProfile,
+  onOpenUserProfile,
   onOpenBackup,
   onBack
 }) {
@@ -412,6 +414,19 @@ export default function ChatWindow({
                   <User className="w-4 h-4 text-quantum-cyan" />
                   <span>{activeChat?.isGroup ? 'Group Details' : 'Contact Info & Security'}</span>
                 </button>
+
+                {onOpenUserProfile && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onOpenUserProfile();
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  >
+                    <Settings className="w-4 h-4 text-wa-green" />
+                    <span>My Profile Settings</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => {
@@ -964,8 +979,21 @@ export default function ChatWindow({
                 }}
                 className="flex-1 py-2 bg-wa-panel hover:bg-wa-hover border border-wa-border text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> View All in Sidebar
+                <ArrowLeft className="w-3.5 h-3.5" /> All Chats
               </button>
+              {onOpenUserProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuickSwitcher(false);
+                    onOpenUserProfile();
+                  }}
+                  className="py-2 px-3 bg-wa-panel hover:bg-wa-hover border border-wa-border text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
+                  title="Open My Profile Settings"
+                >
+                  <User className="w-3.5 h-3.5 text-wa-green" /> Profile
+                </button>
+              )}
               {onOpenNewChat && (
                 <button
                   type="button"
@@ -973,7 +1001,7 @@ export default function ChatWindow({
                     setShowQuickSwitcher(false);
                     onOpenNewChat();
                   }}
-                  className="py-2 px-3.5 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+                  className="py-2 px-3 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5 shadow"
                 >
                   <MessageSquarePlus className="w-3.5 h-3.5" /> New
                 </button>

@@ -11,7 +11,9 @@ import {
   Check,
   CheckCheck,
   Sparkles,
-  User
+  User,
+  MessageSquare,
+  Settings
 } from 'lucide-react';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
 
@@ -285,6 +287,80 @@ export default function Sidebar({
             );
           })
         )}
+      </div>
+
+      {/* Mobile Bottom Navigation Taskbar (Docked at bottom of screen on mobile) */}
+      <div className="md:hidden h-14 bg-wa-surface border-t border-wa-border flex items-center justify-around px-2 shrink-0 z-20">
+        {/* Chats Tab */}
+        <button
+          type="button"
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-green transition"
+          title="Chats"
+        >
+          <div className="relative">
+            <MessageSquare className="w-5 h-5" />
+            {chats?.length > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[15px] h-3.5 px-1 rounded-full bg-wa-green text-black font-bold text-[9px] flex items-center justify-center">
+                {chats.length}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-semibold mt-0.5">Chats</span>
+        </button>
+
+        {/* Quantum Security Dashboard */}
+        <button
+          type="button"
+          onClick={onOpenSecurityDashboard}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-quantum-cyan transition"
+          title="Quantum Security Panel"
+        >
+          <Shield className="w-5 h-5 text-quantum-cyan" />
+          <span className="text-[10px] font-medium mt-0.5">Security</span>
+        </button>
+
+        {/* New Chat Action Button */}
+        <button
+          type="button"
+          onClick={onOpenNewChatModal}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition"
+          title="Start New Chat"
+        >
+          <div className="w-9 h-9 rounded-full bg-wa-green hover:bg-wa-greenHover text-white flex items-center justify-center shadow-lg -mt-4 border-2 border-wa-surface transition active:scale-95">
+            <MessageSquarePlus className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] font-medium mt-0.5 text-wa-textSecondary">New</span>
+        </button>
+
+        {/* Profile Settings Taskbar Tab */}
+        <button
+          type="button"
+          onClick={onOpenUserProfile}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition group"
+          title="Open Profile Settings"
+        >
+          <div className="relative">
+            <img
+              src={getResolvedAvatar(currentUser?.avatarUrl, currentUser?.email, currentUser?.name)}
+              alt={currentUser?.name || 'User'}
+              onError={(e) => handleAvatarError(e, currentUser?.email, currentUser?.name)}
+              className="w-5 h-5 rounded-full object-cover border border-wa-border group-hover:border-wa-green transition bg-wa-bg"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-wa-green ring-1 ring-wa-surface" />
+          </div>
+          <span className="text-[10px] font-medium mt-0.5 text-white">Profile</span>
+        </button>
+
+        {/* More Settings Menu */}
+        <button
+          type="button"
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition"
+          title="More Settings"
+        >
+          <Settings className="w-5 h-5" />
+          <span className="text-[10px] font-medium mt-0.5">Settings</span>
+        </button>
       </div>
     </div>
   );

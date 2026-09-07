@@ -203,7 +203,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form id="user-profile-form" onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Avatar Section */}
           <div className="flex flex-col items-center">
             <div className="relative group">
@@ -426,26 +426,33 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
               <Check className="w-4 h-4" /> {successMsg}
             </div>
           )}
+        </form>
 
-          {/* Submit Action Buttons */}
-          <div className="flex items-center justify-end space-x-3 pt-2">
+        {/* Docked Sticky Bottom Action Taskbar (Always Visible on Mobile & Desktop) */}
+        <div className="h-14 sm:h-16 px-4 sm:px-6 bg-wa-panel border-t border-wa-border flex items-center justify-between shrink-0">
+          <div className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-wa-green shrink-0" />
+            <span className="hidden xs:inline">QDS Identity Secured</span>
+          </div>
+          <div className="flex items-center space-x-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs text-wa-textSecondary hover:text-white hover:bg-wa-hover rounded-lg transition"
+              className="px-3.5 sm:px-4 py-2 text-xs text-wa-textSecondary hover:text-white hover:bg-wa-hover rounded-lg transition"
             >
               Cancel
             </button>
             <button
               type="submit"
+              form="user-profile-form"
               disabled={saving || !name.trim()}
-              className="px-5 py-2 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-bold rounded-lg shadow-md transition flex items-center gap-1.5 disabled:opacity-50 disabled:hover:bg-wa-green"
+              className="px-4 sm:px-5 py-2 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-bold rounded-lg shadow-md transition flex items-center gap-1.5 disabled:opacity-50 disabled:hover:bg-wa-green"
             >
               {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
