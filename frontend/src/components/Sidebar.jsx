@@ -67,8 +67,8 @@ export default function Sidebar({
             />
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-wa-green ring-2 ring-wa-surface" title="Online" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white leading-tight flex items-center gap-1.5 group-hover:text-wa-green transition">
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-white leading-tight flex items-center gap-1.5 group-hover:text-wa-green transition truncate max-w-[130px] sm:max-w-[180px]">
               {currentUser.name}
             </span>
             <span className="text-[11px] text-quantum-cyan flex items-center gap-1 font-mono">

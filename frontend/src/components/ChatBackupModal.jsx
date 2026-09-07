@@ -163,31 +163,31 @@ export default function ChatBackupModal({ activeChat, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none">
-      <div className="bg-wa-surface border border-wa-border max-w-xl w-full rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 select-none">
+      <div className="bg-wa-surface border border-wa-border max-w-xl w-full rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="h-16 px-6 bg-wa-panel border-b border-wa-border flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-full bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 bg-wa-panel border-b border-wa-border flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan shrink-0">
               <Archive className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white leading-tight">Chat Backup & Archive</h2>
-              <p className="text-[11px] text-wa-textSecondary font-mono">
-                Cryptographic export with QDS verification signatures
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-white leading-tight truncate">Chat Backup & Archive</h2>
+              <p className="text-[11px] text-wa-textSecondary font-mono truncate">
+                Cryptographic export & QDS verification
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-wa-border bg-wa-surface/60 px-6 text-xs">
+        <div className="flex border-b border-wa-border bg-wa-surface/60 px-4 sm:px-6 text-xs">
           <button
             onClick={() => setActiveTab('export')}
             className={`py-3 px-4 font-semibold border-b-2 transition flex items-center gap-1.5 ${

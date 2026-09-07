@@ -42,3 +42,4 @@ export const handleAvatarError = (e, fallbackSeed = 'quantum', fallbackName = ''
   const seed = encodeURIComponent(fallbackSeed || fallbackName || 'quantum_user');
   e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
 };
+

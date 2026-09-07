@@ -133,18 +133,18 @@ export default function SecurityDashboard({
   const latestVer = statusData?.latestVerification;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-wa-panel border-l border-wa-border shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-200 select-none">
+    <div className="fixed inset-y-0 right-0 w-full sm:max-w-xl bg-wa-panel border-l border-wa-border shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-200 select-none">
       {/* Drawer Header */}
-      <div className="h-16 px-6 bg-wa-surface border-b border-wa-border flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-quantum-purple/20 border border-quantum-purple/50 flex items-center justify-center text-quantum-cyan">
+      <div className="h-16 px-4 sm:px-6 bg-wa-surface border-b border-wa-border flex items-center justify-between shrink-0">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-quantum-purple/20 border border-quantum-purple/50 flex items-center justify-center text-quantum-cyan shrink-0">
             <ShieldCheck className="w-6 h-6 text-quantum-cyan" />
           </div>
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 truncate">
               Quantum Security & Threat Panel
             </h2>
-            <p className="text-xs text-wa-textSecondary font-mono">
+            <p className="text-xs text-wa-textSecondary font-mono truncate">
               Session: {statusData?.activeSessionId?.substring(0, 16) || 'qds_sess_active'}...
             </p>
           </div>
@@ -152,14 +152,14 @@ export default function SecurityDashboard({
 
         <button
           onClick={onClose}
-          className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+          className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0 ml-2"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex border-b border-wa-border bg-wa-surface/60 px-4">
+      <div className="flex border-b border-wa-border bg-wa-surface/60 px-2 sm:px-4 overflow-x-auto no-scrollbar scrollbar-none whitespace-nowrap shrink-0">
         {[
           { id: 'live', label: 'E91 & QDS Live', icon: Activity },
           { id: 'circuit', label: 'Teleportation Circuit', icon: Cpu },
@@ -175,21 +175,21 @@ export default function SecurityDashboard({
                 setActiveTab(tab.id);
                 if (tab.id === 'benchmark' && !benchmarkMatrix) handleLoadBenchmark();
               }}
-              className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition ${
+              className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition shrink-0 ${
                 activeTab === tab.id
                   ? 'border-wa-green text-wa-green'
                   : 'border-transparent text-wa-textSecondary hover:text-white'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* Tab Contents Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
         {/* --- TAB 1: LIVE E91 & QDS --- */}
         {activeTab === 'live' && (
           <div className="space-y-6">

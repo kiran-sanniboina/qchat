@@ -82,16 +82,17 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-in fade-in select-none">
-      <div className="w-full max-w-md bg-wa-panel rounded-xl border border-wa-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-2 sm:p-4 z-50 animate-in fade-in select-none">
+      <div className="w-full max-w-md bg-wa-panel rounded-xl sm:rounded-2xl border border-wa-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh]">
         {/* Header */}
-        <div className="h-16 px-6 bg-wa-surface border-b border-wa-border flex items-center justify-between shrink-0">
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-wa-green" /> New Quantum Chat
+        <div className="h-14 sm:h-16 px-4 sm:px-6 bg-wa-surface border-b border-wa-border flex items-center justify-between shrink-0">
+          <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 truncate">
+            <UserPlus className="w-5 h-5 text-wa-green shrink-0" />
+            <span>New Quantum Chat</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>

@@ -24,7 +24,8 @@ import {
   AlertCircle,
   Loader2,
   Archive,
-  User
+  User,
+  ArrowLeft
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
@@ -40,7 +41,8 @@ export default function ChatWindow({
   onUpdateCurrentUser,
   onClearChat,
   onOpenChatProfile,
-  onOpenBackup
+  onOpenBackup,
+  onBack
 }) {
   const [inputText, setInputText] = useState('');
   const [selectedAttack, setSelectedAttack] = useState(''); // '' for normal
@@ -237,43 +239,57 @@ export default function ChatWindow({
   return (
     <div className="flex-1 h-full flex flex-col bg-wa-bg relative select-none">
       {/* Chat Window Header */}
-      <div className="h-16 px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-10">
-        {/* Clickable Header for Contact / Chat Profile */}
-        <div
-          onClick={onOpenChatProfile}
-          title="Click to view Contact & Quantum Security Details"
-          className="flex items-center space-x-3.5 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-wa-hover/60 transition"
-        >
-          <div className="relative">
-            <img
-              src={avatar}
-              alt={title}
-              onError={(e) => handleAvatarError(e, fallbackSeed, title)}
-              className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-quantum-cyan transition bg-wa-bg"
-            />
-            {!activeChat?.isGroup && (
-              <span
-                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-wa-surface ${
-                  otherParticipant?.isOnline ? 'bg-wa-green' : 'bg-wa-textSecondary/60'
-                }`}
+      <div className="h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-10">
+        <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
+          {/* Back Button on Mobile */}
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              title="Back to Chats"
+              className="md:hidden p-2 -ml-1 mr-0.5 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5 text-wa-textSecondary hover:text-white" />
+            </button>
+          )}
+
+          {/* Clickable Header for Contact / Chat Profile */}
+          <div
+            onClick={onOpenChatProfile}
+            title="Click to view Contact & Quantum Security Details"
+            className="flex items-center space-x-2.5 sm:space-x-3.5 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-wa-hover/60 transition min-w-0"
+          >
+            <div className="relative shrink-0">
+              <img
+                src={avatar}
+                alt={title}
+                onError={(e) => handleAvatarError(e, fallbackSeed, title)}
+                className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-quantum-cyan transition bg-wa-bg"
               />
-            )}
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition">
-              {title}
-            </h2>
-            <p className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-medium">
-              {isOtherUserTyping ? (
-                <span className="text-wa-green animate-pulse font-semibold">typing...</span>
-              ) : otherParticipant?.isOnline ? (
-                <span className="text-wa-green flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-wa-green" /> online
-                </span>
-              ) : (
-                <span>last seen recently</span>
+              {!activeChat?.isGroup && (
+                <span
+                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-wa-surface ${
+                    otherParticipant?.isOnline ? 'bg-wa-green' : 'bg-wa-textSecondary/60'
+                  }`}
+                />
               )}
-            </p>
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[280px] md:max-w-none">
+                {title}
+              </h2>
+              <p className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-medium truncate">
+                {isOtherUserTyping ? (
+                  <span className="text-wa-green animate-pulse font-semibold">typing...</span>
+                ) : otherParticipant?.isOnline ? (
+                  <span className="text-wa-green flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-wa-green" /> online
+                  </span>
+                ) : (
+                  <span>last seen recently</span>
+                )}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -487,15 +503,15 @@ export default function ChatWindow({
 
       {/* Attack Simulator Bar for Demo Mode */}
       {showAttackPicker && (
-        <div className="p-3 bg-red-950/40 border-t border-red-500/40 animate-in slide-in-from-bottom-2">
+        <div className="p-3 bg-red-950/40 border-t border-red-500/40 max-h-48 overflow-y-auto animate-in slide-in-from-bottom-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-red-300 flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-amber-400" />
-              DEMO ATTACK SIMULATOR (Test Deterministic Threat Engine)
+            <span className="text-xs font-bold text-red-300 flex items-center gap-1.5 truncate pr-2">
+              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>DEMO ATTACK SIMULATOR</span>
             </span>
             <button
               onClick={() => setShowAttackPicker(false)}
-              className="text-xs text-wa-textSecondary hover:text-white"
+              className="text-xs text-wa-textSecondary hover:text-white shrink-0"
             >
               Close
             </button>
@@ -515,7 +531,7 @@ export default function ChatWindow({
                 key={att.id}
                 type="button"
                 onClick={() => { setSelectedAttack(att.id); setShowAttackPicker(false); }}
-                className={`px-2.5 py-1.5 rounded border text-left truncate transition ${
+                className={`px-2 py-1.5 rounded border text-left truncate transition ${
                   selectedAttack === att.id
                     ? 'bg-red-500/30 border-red-400 text-white font-bold'
                     : 'bg-wa-surface border-wa-border hover:bg-wa-hover text-wa-textPrimary'
@@ -531,44 +547,44 @@ export default function ChatWindow({
 
       {/* Selected Attack Notification Banner */}
       {selectedAttack && (
-        <div className="px-4 py-1.5 bg-red-900/60 border-t border-red-500/50 flex items-center justify-between text-xs text-red-200">
-          <span>
-            ⚠️ Next send will simulate attack: <strong className="text-white">{selectedAttack}</strong>
+        <div className="px-3 sm:px-4 py-1.5 bg-red-900/60 border-t border-red-500/50 flex items-center justify-between text-xs text-red-200">
+          <span className="truncate pr-2">
+            ⚠️ Simulating: <strong className="text-white">{selectedAttack}</strong>
           </span>
           <button
             onClick={() => setSelectedAttack('')}
-            className="text-red-300 hover:text-white underline font-semibold"
+            className="text-red-300 hover:text-white underline font-semibold shrink-0"
           >
-            Cancel simulation
+            Cancel
           </button>
         </div>
       )}
 
       {/* Blocked Contact Warning Bar or Input Bar */}
       {isContactBlocked ? (
-        <div className="h-16 px-6 bg-red-950/40 border-t border-red-500/40 flex items-center justify-between shrink-0 animate-in fade-in">
-          <div className="flex items-center gap-2.5 text-xs text-red-200">
-            <Ban className="w-5 h-5 text-red-400 shrink-0" />
-            <span>You have blocked this contact. Unblock to send messages.</span>
+        <div className="h-16 px-4 sm:px-6 bg-red-950/40 border-t border-red-500/40 flex items-center justify-between shrink-0 animate-in fade-in">
+          <div className="flex items-center gap-2 text-xs text-red-200 truncate pr-2">
+            <Ban className="w-4 h-4 text-red-400 shrink-0" />
+            <span className="truncate">You have blocked this contact.</span>
           </div>
           <button
             type="button"
             onClick={handleToggleBlock}
             disabled={blocking}
-            className="px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 hover:text-white rounded-lg text-xs font-semibold transition"
+            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 hover:text-white rounded-lg text-xs font-semibold transition shrink-0"
           >
-            {blocking ? 'Updating...' : 'Unblock Contact'}
+            {blocking ? 'Updating...' : 'Unblock'}
           </button>
         </div>
       ) : (
         /* Message Input Bar */
-        <div className="h-16 px-4 bg-wa-surface flex items-center space-x-3 border-t border-wa-border shrink-0">
+        <div className="min-h-[56px] py-2 px-2 sm:px-4 bg-wa-surface flex items-center space-x-1.5 sm:space-x-3 border-t border-wa-border shrink-0">
           {/* Attack Demo Toggle */}
           <button
             type="button"
             onClick={() => setShowAttackPicker(!showAttackPicker)}
             title="Demo Attack Simulator"
-            className={`p-2 rounded-full transition flex items-center gap-1 ${
+            className={`p-2 rounded-full transition flex items-center gap-1 shrink-0 ${
               selectedAttack
                 ? 'bg-red-500/20 text-red-400 border border-red-500/50'
                 : 'hover:bg-wa-hover text-wa-textSecondary hover:text-amber-400'
@@ -583,7 +599,7 @@ export default function ChatWindow({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             title="Attach Image or Document"
-            className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition disabled:opacity-50"
+            className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition disabled:opacity-50 shrink-0"
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -596,23 +612,23 @@ export default function ChatWindow({
           />
 
           {/* Text Input Form */}
-          <form onSubmit={handleSend} className="flex-1 flex items-center space-x-2">
+          <form onSubmit={handleSend} className="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={
                 selectedAttack
-                  ? `Type message (will simulate ${selectedAttack})...`
-                  : 'Type a message (secured by QDS)...'
+                  ? `Simulating ${selectedAttack}...`
+                  : 'Type a message...'
               }
-              className="w-full bg-wa-panel border border-wa-border rounded-lg px-4 py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition"
+              className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition min-w-0"
             />
 
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
+              className="p-2 sm:p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
             >
               {sending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

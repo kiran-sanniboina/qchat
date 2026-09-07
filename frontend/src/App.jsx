@@ -274,7 +274,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen bg-wa-bg overflow-hidden relative">
+    <div className="flex h-screen h-[100dvh] w-screen bg-wa-bg overflow-hidden relative">
       {/* Real-Time Security Alert Toast */}
       {activeToast && (
         <div className="fixed top-4 right-4 z-50 max-w-md p-4 bg-red-950/90 border-2 border-red-500 rounded-xl shadow-2xl animate-in slide-in-from-top-4 flex items-start gap-3">
@@ -307,37 +307,43 @@ export default function App() {
         </div>
       )}
 
-      {/* Main WhatsApp Web Shell */}
-      <Sidebar
-        currentUser={currentUser}
-        chats={chats}
-        activeChat={activeChat}
-        onSelectChat={(chat) => setActiveChat(chat)}
-        onOpenNewChatModal={() => setShowNewChatModal(true)}
-        onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
-        onOpenUserProfile={() => setShowUserProfileModal(true)}
-        onLogout={handleLogout}
-      />
-
-      {activeChat ? (
-        <ChatWindow
-          activeChat={activeChat}
+      {/* Main WhatsApp Web Shell: Sidebar Container */}
+      <div className={`${activeChat ? 'hidden md:flex' : 'flex'} w-full md:w-[380px] lg:w-[420px] h-full shrink-0 flex-col`}>
+        <Sidebar
           currentUser={currentUser}
-          messages={messages}
-          typingStatus={typingStatus}
-          onSendMessage={handleSendMessage}
+          chats={chats}
+          activeChat={activeChat}
+          onSelectChat={(chat) => setActiveChat(chat)}
+          onOpenNewChatModal={() => setShowNewChatModal(true)}
           onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
-          onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
-          onUpdateCurrentUser={handleUpdateCurrentUser}
-          onClearChat={handleClearMessages}
-          onOpenChatProfile={() => setShowChatProfileModal(true)}
-          onOpenBackup={(chat) => {
-            setChatForBackup(chat || activeChat);
-            setShowChatBackupModal(true);
-          }}
+          onOpenUserProfile={() => setShowUserProfileModal(true)}
+          onLogout={handleLogout}
         />
+      </div>
+
+      {/* Main WhatsApp Web Shell: Active Chat Window or Desktop Splash */}
+      {activeChat ? (
+        <div className="flex-1 h-full w-full flex flex-col min-w-0">
+          <ChatWindow
+            activeChat={activeChat}
+            currentUser={currentUser}
+            messages={messages}
+            typingStatus={typingStatus}
+            onSendMessage={handleSendMessage}
+            onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
+            onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
+            onUpdateCurrentUser={handleUpdateCurrentUser}
+            onClearChat={handleClearMessages}
+            onOpenChatProfile={() => setShowChatProfileModal(true)}
+            onOpenBackup={(chat) => {
+              setChatForBackup(chat || activeChat);
+              setShowChatBackupModal(true);
+            }}
+            onBack={() => setActiveChat(null)}
+          />
+        </div>
       ) : (
-        <div className="flex-1 h-full bg-wa-surface flex flex-col items-center justify-center p-8 text-center select-none border-b-[6px] border-wa-green">
+        <div className="hidden md:flex flex-1 h-full bg-wa-surface flex-col items-center justify-center p-8 text-center select-none border-b-[6px] border-wa-green">
           <div className="w-24 h-24 rounded-full bg-wa-panel border border-wa-border flex items-center justify-center text-quantum-cyan mb-4 shadow-xl">
             <AlertTriangle className="w-12 h-12 text-wa-green" />
           </div>
