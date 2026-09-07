@@ -95,6 +95,7 @@ export default function ChatWindow({
   };
 
   const fileInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -109,13 +110,26 @@ export default function ChatWindow({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (smooth = false) => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
   };
 
+  // Pin window & document scroll to top on chat switch to prevent header clipping
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, typingStatus]);
+    window.scrollTo(0, 0);
+    if (document.body) document.body.scrollTop = 0;
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    scrollToBottom(false);
+  }, [activeChat?._id]);
+
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [messages?.length, typingStatus]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -288,10 +302,10 @@ export default function ChatWindow({
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="flex-1 h-full flex flex-col bg-wa-bg relative select-none"
+      className="flex-1 h-full w-full flex flex-col bg-wa-bg relative select-none min-h-0 overflow-hidden"
     >
       {/* Chat Window Header */}
-      <div className="h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-10">
+      <div className="h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-20">
         <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
           {/* Back Button on Mobile */}
           {onBack && (
@@ -558,7 +572,7 @@ export default function ChatWindow({
       )}
 
       {/* Messages Stream with WhatsApp Doodle Pattern */}
-      <div className="flex-1 overflow-y-auto wa-chat-bg p-4 space-y-3">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto wa-chat-bg p-4 space-y-3 min-h-0">
         {/* End-to-End Quantum Security Notice */}
         <div className="max-w-md mx-auto bg-wa-panel/90 border border-wa-border rounded-lg p-2.5 text-center shadow-md my-2">
           <div className="flex items-center justify-center gap-1.5 text-amber-300 text-xs font-semibold mb-1">
