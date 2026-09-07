@@ -25,7 +25,10 @@ import {
   Loader2,
   Archive,
   User,
-  ArrowLeft
+  ArrowLeft,
+  ArrowLeftRight,
+  Search,
+  MessageSquarePlus
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
@@ -35,6 +38,9 @@ export default function ChatWindow({
   currentUser,
   messages,
   typingStatus,
+  chats = [],
+  onSelectChat,
+  onOpenNewChat,
   onSendMessage,
   onOpenSecurityDashboard,
   onSelectMessageVerification,
@@ -53,6 +59,38 @@ export default function ChatWindow({
   const [clearing, setClearing] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showQuickSwitcher, setShowQuickSwitcher] = useState(false);
+  const [quickSwitcherSearch, setQuickSwitcherSearch] = useState('');
+
+  // Touch swipe gesture handling for mobile: swipe right from edge to go back
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const touchStartTimeRef = useRef(0);
+  const isSwipingRef = useRef(false);
+
+  const handleTouchStart = (e) => {
+    if (!onBack) return;
+    const touch = e.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+    touchStartTimeRef.current = Date.now();
+    // Only arm swipe if started within 85px of left screen edge
+    isSwipingRef.current = touch.clientX < 85;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!onBack || !isSwipingRef.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+    const deltaTime = Date.now() - touchStartTimeRef.current;
+
+    // Trigger back if swiped right by at least 70px horizontally, low vertical drift, under 450ms
+    if (deltaX > 70 && Math.abs(deltaY) < 60 && deltaTime < 450) {
+      onBack();
+    }
+    isSwipingRef.current = false;
+  };
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -236,8 +274,20 @@ export default function ChatWindow({
     return null;
   };
 
+  const filteredSwitcherChats = (chats || []).filter((chat) => {
+    if (!quickSwitcherSearch.trim()) return true;
+    const name = chat.isGroup
+      ? chat.name
+      : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId)?.name || '';
+    return name.toLowerCase().includes(quickSwitcherSearch.toLowerCase());
+  });
+
   return (
-    <div className="flex-1 h-full flex flex-col bg-wa-bg relative select-none">
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="flex-1 h-full flex flex-col bg-wa-bg relative select-none"
+    >
       {/* Chat Window Header */}
       <div className="h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-10">
         <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
@@ -275,7 +325,7 @@ export default function ChatWindow({
               )}
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[280px] md:max-w-none">
+              <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[280px] md:max-w-none">
                 {title}
               </h2>
               <p className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-medium truncate">
@@ -294,7 +344,17 @@ export default function ChatWindow({
         </div>
 
         {/* Security & Action Buttons */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1 sm:space-x-3">
+          {/* Mobile Quick Switcher Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowQuickSwitcher(true)}
+            title="Quick switch conversation"
+            className="md:hidden p-2 hover:bg-wa-hover text-quantum-cyan rounded-full transition shrink-0"
+          >
+            <ArrowLeftRight className="w-4 h-4" />
+          </button>
+
           {/* Active E91 Status Pill */}
           <button
             onClick={onOpenSecurityDashboard}
@@ -331,6 +391,17 @@ export default function ChatWindow({
 
             {showMenu && (
               <div className="absolute right-0 top-11 w-52 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowQuickSwitcher(true);
+                  }}
+                  className="md:hidden w-full px-4 py-2.5 text-left text-xs text-quantum-cyan hover:bg-wa-hover flex items-center gap-2.5 transition font-medium"
+                >
+                  <ArrowLeftRight className="w-4 h-4 text-quantum-cyan" />
+                  <span>Switch Conversation</span>
+                </button>
+
                 <button
                   onClick={() => {
                     setShowMenu(false);
@@ -394,6 +465,82 @@ export default function ChatWindow({
           </div>
         </div>
       </div>
+
+      {/* Mobile Quick-Switch Avatar Ribbon */}
+      {chats && chats.length > 1 && (
+        <div className="md:hidden bg-wa-surface/95 border-b border-wa-border/80 px-2.5 py-1.5 flex items-center space-x-2 overflow-x-auto no-scrollbar shrink-0 z-10">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-white text-[11px] font-medium shrink-0 border border-wa-border transition"
+            title="All Chats"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            <span>All</span>
+            <span className="text-[10px] text-quantum-cyan bg-quantum-cyan/10 px-1 py-0.2 rounded-full border border-quantum-cyan/20 ml-0.5 font-mono">
+              {chats.length}
+            </span>
+          </button>
+
+          <div className="h-5 w-[1px] bg-wa-border/60 shrink-0" />
+
+          {/* Horizontal Chat Pills */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
+            {chats.map((chat) => {
+              const isCurrent = chat._id === activeChat._id;
+              const other = chat.isGroup
+                ? null
+                : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
+              const name = chat.isGroup ? chat.name : (other?.name || 'User');
+              const avatar = getResolvedAvatar(
+                chat.isGroup ? chat.avatar : other?.avatarUrl,
+                chat.isGroup ? chat._id : (other?.email || name),
+                name
+              );
+              const isOnline = !chat.isGroup && other?.isOnline;
+
+              return (
+                <button
+                  key={chat._id}
+                  type="button"
+                  onClick={() => onSelectChat && onSelectChat(chat)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0 transition text-left ${
+                    isCurrent
+                      ? 'bg-wa-green/20 border border-wa-green/70 text-white shadow-sm ring-1 ring-wa-green/40'
+                      : 'bg-wa-panel/80 hover:bg-wa-panel border border-wa-border/60 text-wa-textSecondary hover:text-white'
+                  }`}
+                  title={`Switch to ${name}`}
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={avatar}
+                      alt={name}
+                      onError={(e) => handleAvatarError(e, chat.isGroup ? chat._id : (other?.email || name), name)}
+                      className="w-5 h-5 rounded-full object-cover bg-wa-bg"
+                    />
+                    {isOnline && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-wa-green ring-1 ring-wa-panel" />
+                    )}
+                  </div>
+                  <span className={`text-[11px] max-w-[80px] truncate ${isCurrent ? 'text-wa-green font-semibold' : 'font-medium'}`}>
+                    {name.split(' ')[0]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Switch Drawer Button */}
+          <button
+            type="button"
+            onClick={() => setShowQuickSwitcher(true)}
+            className="p-1 rounded-full bg-wa-panel hover:bg-wa-hover text-quantum-cyan border border-wa-border/60 shrink-0 transition ml-auto"
+            title="Search and switch conversations"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Messages Stream with WhatsApp Doodle Pattern */}
       <div className="flex-1 overflow-y-auto wa-chat-bg p-4 space-y-3">
@@ -670,6 +817,167 @@ export default function ChatWindow({
               >
                 {clearing ? 'Clearing...' : 'Clear Chat'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Quick Switcher Sheet / Drawer */}
+      {showQuickSwitcher && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setShowQuickSwitcher(false)}
+        >
+          <div
+            className="bg-wa-surface border border-wa-border w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sheet Pull Indicator for Mobile */}
+            <div className="w-12 h-1 rounded-full bg-wa-border mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+            {/* Header */}
+            <div className="p-3.5 border-b border-wa-border flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full bg-quantum-cyan/10 border border-quantum-cyan/30 flex items-center justify-center text-quantum-cyan">
+                  <ArrowLeftRight className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Switch Conversation</h3>
+                  <p className="text-[11px] text-wa-textSecondary">
+                    {chats?.length || 0} active {chats?.length === 1 ? 'chat' : 'chats'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowQuickSwitcher(false)}
+                className="p-1.5 rounded-full hover:bg-wa-hover text-wa-textSecondary hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Filter */}
+            <div className="p-3 border-b border-wa-border bg-wa-panel shrink-0">
+              <div className="flex items-center bg-wa-surface rounded-lg px-3 py-1.5 border border-wa-border focus-within:border-quantum-cyan">
+                <Search className="w-4 h-4 text-wa-textSecondary mr-2 shrink-0" />
+                <input
+                  type="text"
+                  value={quickSwitcherSearch}
+                  onChange={(e) => setQuickSwitcherSearch(e.target.value)}
+                  placeholder="Filter conversations..."
+                  className="w-full bg-transparent text-xs text-white placeholder-wa-textSecondary focus:outline-none"
+                  autoFocus
+                />
+                {quickSwitcherSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickSwitcherSearch('')}
+                    className="p-1 text-wa-textSecondary hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Chat List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-wa-border/40 p-2 space-y-0.5">
+              {filteredSwitcherChats.length === 0 ? (
+                <div className="py-8 text-center text-wa-textSecondary text-xs">
+                  No conversations match "{quickSwitcherSearch}".
+                </div>
+              ) : (
+                filteredSwitcherChats.map((chat) => {
+                  const isCurrent = chat._id === activeChat._id;
+                  const other = chat.isGroup
+                    ? null
+                    : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
+                  const name = chat.isGroup ? chat.name : (other?.name || 'User');
+                  const avatar = getResolvedAvatar(
+                    chat.isGroup ? chat.avatar : other?.avatarUrl,
+                    chat.isGroup ? chat._id : (other?.email || name),
+                    name
+                  );
+                  const isOnline = !chat.isGroup && other?.isOnline;
+                  const lastMsg = chat.lastMessage;
+
+                  return (
+                    <div
+                      key={chat._id}
+                      onClick={() => {
+                        if (onSelectChat) onSelectChat(chat);
+                        setShowQuickSwitcher(false);
+                      }}
+                      className={`flex items-center px-3 py-2.5 rounded-xl cursor-pointer transition ${
+                        isCurrent
+                          ? 'bg-wa-active border border-wa-green/40 shadow-sm'
+                          : 'hover:bg-wa-hover'
+                      }`}
+                    >
+                      {/* Avatar */}
+                      <div className="relative shrink-0 mr-3">
+                        <img
+                          src={avatar}
+                          alt={name}
+                          onError={(e) => handleAvatarError(e, chat.isGroup ? chat._id : (other?.email || name), name)}
+                          className="w-10 h-10 rounded-full object-cover bg-wa-bg border border-wa-border"
+                        />
+                        {isOnline && (
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-wa-green border-2 border-wa-surface" />
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-xs font-semibold truncate pr-2 ${isCurrent ? 'text-wa-green' : 'text-white'}`}>
+                            {name}
+                          </h4>
+                          {isCurrent && (
+                            <span className="text-[10px] font-bold text-wa-green uppercase tracking-wider bg-wa-green/15 px-1.5 py-0.5 rounded border border-wa-green/30">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-wa-textSecondary truncate mt-0.5">
+                          {lastMsg ? (
+                            lastMsg.plaintextPreview || (lastMsg.mediaUrl ? `[Media: ${lastMsg.mediaType}]` : 'Encrypted message')
+                          ) : (
+                            <span className="italic text-quantum-cyan/70">Quantum channel ready</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="p-3 border-t border-wa-border bg-wa-surface flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowQuickSwitcher(false);
+                  if (onBack) onBack();
+                }}
+                className="flex-1 py-2 bg-wa-panel hover:bg-wa-hover border border-wa-border text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> View All in Sidebar
+              </button>
+              {onOpenNewChat && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuickSwitcher(false);
+                    onOpenNewChat();
+                  }}
+                  className="py-2 px-3.5 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+                >
+                  <MessageSquarePlus className="w-3.5 h-3.5" /> New
+                </button>
+              )}
             </div>
           </div>
         </div>

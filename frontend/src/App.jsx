@@ -329,6 +329,9 @@ export default function App() {
             currentUser={currentUser}
             messages={messages}
             typingStatus={typingStatus}
+            chats={chats}
+            onSelectChat={(chat) => setActiveChat(chat)}
+            onOpenNewChat={() => setShowNewChatModal(true)}
             onSendMessage={handleSendMessage}
             onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
             onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}

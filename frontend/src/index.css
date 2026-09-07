@@ -60,3 +60,12 @@
 .threat-pulse {
   animation: threat-flash 1.2s infinite ease-in-out;
 }
+
+/* Hide scrollbar for clean horizontal ribbon scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
