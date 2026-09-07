@@ -274,7 +274,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen h-[100dvh] w-screen bg-wa-bg overflow-hidden relative fixed inset-0">
+    <div className="fixed inset-0 w-full h-full flex bg-wa-bg overflow-hidden select-none">
       {/* Real-Time Security Alert Toast */}
       {activeToast && (
         <div className="fixed top-4 right-4 z-50 max-w-md p-4 bg-red-950/90 border-2 border-red-500 rounded-xl shadow-2xl animate-in slide-in-from-top-4 flex items-start gap-3">
@@ -308,7 +308,7 @@ export default function App() {
       )}
 
       {/* Main WhatsApp Web Shell: Sidebar Container */}
-      <div className={`${activeChat ? 'hidden md:flex' : 'flex'} w-full md:w-[380px] lg:w-[420px] h-full shrink-0 flex-col`}>
+      <div className={`${activeChat ? 'hidden md:flex' : 'flex'} w-full md:w-[380px] lg:w-[420px] h-full shrink-0 flex-col min-h-0 overflow-hidden`}>
         <Sidebar
           currentUser={currentUser}
           chats={chats}

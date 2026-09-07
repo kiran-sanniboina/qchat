@@ -305,7 +305,7 @@ export default function ChatWindow({
       className="flex-1 h-full w-full flex flex-col bg-wa-bg relative select-none min-h-0 overflow-hidden"
     >
       {/* Chat Window Header */}
-      <div className="h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-20">
+      <div className="h-14 sm:h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-20">
         <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
           {/* Back Button on Mobile */}
           {onBack && (
@@ -754,7 +754,7 @@ export default function ChatWindow({
         </div>
       ) : (
         /* Message Input Bar */
-        <div className="min-h-[56px] py-2 px-2 sm:px-4 bg-wa-surface flex items-center space-x-1.5 sm:space-x-3 border-t border-wa-border shrink-0">
+        <div className="min-h-[52px] sm:min-h-[56px] py-1.5 sm:py-2 px-2 sm:px-4 bg-wa-surface flex items-center space-x-1.5 sm:space-x-3 border-t border-wa-border shrink-0 z-20">
           {/* Attack Demo Toggle */}
           <button
             type="button"
@@ -793,6 +793,7 @@ export default function ChatWindow({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onFocus={() => setTimeout(() => scrollToBottom(true), 200)}
               placeholder={
                 selectedAttack
                   ? `Simulating ${selectedAttack}...`

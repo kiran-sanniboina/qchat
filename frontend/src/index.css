@@ -6,12 +6,12 @@
   html,
   body,
   #root {
-    @apply bg-wa-bg text-wa-textPrimary font-sans antialiased select-none overflow-hidden;
+    @apply bg-wa-bg text-wa-textPrimary font-sans antialiased select-none;
     height: 100%;
-    height: 100dvh;
     width: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
     overscroll-behavior: none;
   }
 }
