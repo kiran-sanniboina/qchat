@@ -22,7 +22,9 @@ import {
   UserCheck,
   X,
   AlertCircle,
-  Loader2
+  Loader2,
+  Archive,
+  User
 } from 'lucide-react';
 import api from '../api';
 
@@ -35,7 +37,9 @@ export default function ChatWindow({
   onOpenSecurityDashboard,
   onSelectMessageVerification,
   onUpdateCurrentUser,
-  onClearChat
+  onClearChat,
+  onOpenChatProfile,
+  onOpenBackup
 }) {
   const [inputText, setInputText] = useState('');
   const [selectedAttack, setSelectedAttack] = useState(''); // '' for normal
@@ -230,14 +234,30 @@ export default function ChatWindow({
     <div className="flex-1 h-full flex flex-col bg-wa-bg relative select-none">
       {/* Chat Window Header */}
       <div className="h-16 px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-10">
-        <div className="flex items-center space-x-3.5">
-          <img
-            src={avatar}
-            alt={title}
-            className="w-10 h-10 rounded-full object-cover border border-wa-border bg-wa-bg"
-          />
+        {/* Clickable Header for Contact / Chat Profile */}
+        <div
+          onClick={onOpenChatProfile}
+          title="Click to view Contact & Quantum Security Details"
+          className="flex items-center space-x-3.5 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-wa-hover/60 transition"
+        >
+          <div className="relative">
+            <img
+              src={avatar}
+              alt={title}
+              className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-quantum-cyan transition bg-wa-bg"
+            />
+            {!activeChat?.isGroup && (
+              <span
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-wa-surface ${
+                  otherParticipant?.isOnline ? 'bg-wa-green' : 'bg-wa-textSecondary/60'
+                }`}
+              />
+            )}
+          </div>
           <div>
-            <h2 className="text-sm font-semibold text-white leading-tight">{title}</h2>
+            <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition">
+              {title}
+            </h2>
             <p className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-medium">
               {isOtherUserTyping ? (
                 <span className="text-wa-green animate-pulse font-semibold">typing...</span>
@@ -289,7 +309,31 @@ export default function ChatWindow({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-11 w-48 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 top-11 w-52 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    if (onOpenChatProfile) onOpenChatProfile();
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                >
+                  <User className="w-4 h-4 text-quantum-cyan" />
+                  <span>{activeChat?.isGroup ? 'Group Details' : 'Contact Info & Security'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    if (onOpenBackup) onOpenBackup(activeChat);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                >
+                  <Archive className="w-4 h-4 text-quantum-cyan" />
+                  <span>Backup Chat</span>
+                </button>
+
+                <div className="border-t border-wa-border my-1" />
+
                 <button
                   onClick={() => {
                     setShowClearModal(true);

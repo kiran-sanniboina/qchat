@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
         error: 'Database not connected. Please add your MONGO_URI in Render Environment variables.'
       });
     }
-    const { name, email, password, avatarUrl, statusBio } = req.body;
+    const { name, email, password, avatarUrl, statusBio, phone } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
@@ -42,6 +42,7 @@ exports.register = async (req, res) => {
       passwordHash,
       avatarUrl: defaultAvatar,
       statusBio: statusBio || 'Secured with Quantum Digital Signatures (QDS)',
+      phone: phone || '',
       isOnline: true,
       lastSeen: new Date()
     });
@@ -60,6 +61,7 @@ exports.register = async (req, res) => {
         publicIdentity: user.publicIdentity,
         avatarUrl: user.avatarUrl,
         statusBio: user.statusBio,
+        phone: user.phone || '',
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
         blockedUsers: user.blockedUsers || []
@@ -111,6 +113,7 @@ exports.login = async (req, res) => {
         publicIdentity: user.publicIdentity,
         avatarUrl: user.avatarUrl,
         statusBio: user.statusBio,
+        phone: user.phone || '',
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
         blockedUsers: user.blockedUsers || []
@@ -133,6 +136,7 @@ exports.getMe = async (req, res) => {
         publicIdentity: req.user.publicIdentity,
         avatarUrl: req.user.avatarUrl,
         statusBio: req.user.statusBio,
+        phone: req.user.phone || '',
         isOnline: req.user.isOnline,
         lastSeen: req.user.lastSeen,
         blockedUsers: req.user.blockedUsers || []
@@ -140,6 +144,61 @@ exports.getMe = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: 'Server error fetching user.' });
+  }
+};
+
+// Update user profile (name, statusBio, avatarUrl, phone)
+exports.updateProfile = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const { name, statusBio, avatarUrl, phone } = req.body;
+
+    const updates = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (statusBio !== undefined) updates.statusBio = statusBio.trim();
+    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl.trim();
+    if (phone !== undefined) updates.phone = phone.trim();
+
+    if (updates.name === '') {
+      return res.status(400).json({ error: 'Name cannot be empty.' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      currentUserId,
+      { $set: updates },
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const userData = {
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      publicIdentity: updatedUser.publicIdentity,
+      avatarUrl: updatedUser.avatarUrl,
+      statusBio: updatedUser.statusBio,
+      phone: updatedUser.phone || '',
+      isOnline: updatedUser.isOnline,
+      lastSeen: updatedUser.lastSeen,
+      blockedUsers: updatedUser.blockedUsers || []
+    };
+
+    // Broadcast user update via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('user:updated', userData);
+    }
+
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: userData
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.status(500).json({ error: error.message || 'Server error updating profile.' });
   }
 };
 

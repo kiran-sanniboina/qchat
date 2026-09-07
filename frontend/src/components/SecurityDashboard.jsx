@@ -103,6 +103,7 @@ export default function SecurityDashboard({
       setSimFeedback(sim);
       fetchSecurityData();
     } catch (err) {
+      alert('Simulation error: ' + err.message);
       const errMsg = err.response?.data?.error || err.message;
       setSimError(errMsg);
     } finally {

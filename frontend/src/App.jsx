@@ -7,6 +7,9 @@ import ChatWindow from './components/ChatWindow';
 import SecurityDashboard from './components/SecurityDashboard';
 import NewChatModal from './components/NewChatModal';
 import VerificationDetailModal from './components/VerificationDetailModal';
+import UserProfileModal from './components/UserProfileModal';
+import ChatProfileModal from './components/ChatProfileModal';
+import ChatBackupModal from './components/ChatBackupModal';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -26,6 +29,10 @@ export default function App() {
   const [showSecurityDashboard, setShowSecurityDashboard] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [selectedMessageForVer, setSelectedMessageForVer] = useState(null);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [showChatProfileModal, setShowChatProfileModal] = useState(false);
+  const [showChatBackupModal, setShowChatBackupModal] = useState(false);
+  const [chatForBackup, setChatForBackup] = useState(null);
 
   // Fetch chats on mount / auth change
   const fetchChats = async () => {
@@ -153,6 +160,30 @@ export default function App() {
       }
     };
 
+    // User profile update handler
+    const handleUserUpdated = (updatedUser) => {
+      const updatedId = updatedUser.id || updatedUser._id;
+      if (updatedId === currentUser?.id || updatedId === currentUser?._id) {
+        handleUpdateCurrentUser(updatedUser);
+      }
+      setChats((prev) =>
+        prev.map((c) => ({
+          ...c,
+          participants: c.participants?.map((p) =>
+            (p._id || p.id) === updatedId ? { ...p, ...updatedUser } : p
+          )
+        }))
+      );
+      if (activeChat) {
+        setActiveChat((prev) => ({
+          ...prev,
+          participants: prev?.participants?.map((p) =>
+            (p._id || p.id) === updatedId ? { ...p, ...updatedUser } : p
+          )
+        }));
+      }
+    };
+
     socket.on('message:new', handleNewMessage);
     socket.on('message:status', handleMessageStatus);
     socket.on('presence:update', handlePresenceUpdate);
@@ -160,6 +191,7 @@ export default function App() {
     socket.on('security:alert', handleSecurityAlert);
     socket.on('channel:update', handleChannelUpdate);
     socket.on('chat:cleared', handleChatCleared);
+    socket.on('user:updated', handleUserUpdated);
 
     return () => {
       if (activeChat) {
@@ -172,8 +204,25 @@ export default function App() {
       socket.off('security:alert', handleSecurityAlert);
       socket.off('channel:update', handleChannelUpdate);
       socket.off('chat:cleared', handleChatCleared);
+      socket.off('user:updated', handleUserUpdated);
     };
   }, [currentUser, activeChat]);
+
+  const handleToggleBlockContact = async (targetUser) => {
+    if (!targetUser) return;
+    const targetId = targetUser._id || targetUser.id;
+    const isBlocked = currentUser?.blockedUsers?.some(
+      (id) => (id._id || id).toString() === targetId.toString()
+    );
+
+    try {
+      const endpoint = isBlocked ? '/auth/unblock' : '/auth/block';
+      const res = await api.post(endpoint, { targetUserId: targetId });
+      handleUpdateCurrentUser({ blockedUsers: res.data.blockedUsers });
+    } catch (err) {
+      alert('Failed to update block state: ' + (err.response?.data?.error || err.message));
+    }
+  };
 
   const handleUpdateCurrentUser = (updatedFields) => {
     setCurrentUser((prev) => {
@@ -263,6 +312,7 @@ export default function App() {
         onSelectChat={(chat) => setActiveChat(chat)}
         onOpenNewChatModal={() => setShowNewChatModal(true)}
         onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
+        onOpenUserProfile={() => setShowUserProfileModal(true)}
         onLogout={handleLogout}
       />
 
@@ -277,6 +327,11 @@ export default function App() {
           onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
           onUpdateCurrentUser={handleUpdateCurrentUser}
           onClearChat={handleClearMessages}
+          onOpenChatProfile={() => setShowChatProfileModal(true)}
+          onOpenBackup={(chat) => {
+            setChatForBackup(chat || activeChat);
+            setShowChatBackupModal(true);
+          }}
         />
       ) : (
         <div className="flex-1 h-full bg-wa-surface flex flex-col items-center justify-center p-8 text-center select-none border-b-[6px] border-wa-green">
@@ -323,6 +378,54 @@ export default function App() {
         <VerificationDetailModal
           message={selectedMessageForVer}
           onClose={() => setSelectedMessageForVer(null)}
+        />
+      )}
+
+      {/* User Profile Settings Modal */}
+      {showUserProfileModal && (
+        <UserProfileModal
+          currentUser={currentUser}
+          onClose={() => setShowUserProfileModal(false)}
+          onUpdateUser={(updated) => handleUpdateCurrentUser(updated)}
+        />
+      )}
+
+      {/* Chat / Contact Profile Modal */}
+      {showChatProfileModal && activeChat && (
+        <ChatProfileModal
+          activeChat={activeChat}
+          currentUser={currentUser}
+          messages={messages}
+          onClose={() => setShowChatProfileModal(false)}
+          onOpenBackup={(chat) => {
+            setChatForBackup(chat || activeChat);
+            setShowChatBackupModal(true);
+          }}
+          onClearChat={handleClearMessages}
+          onToggleBlock={() => {
+            const other = activeChat?.isGroup
+              ? null
+              : activeChat?.participants?.find((p) => (p._id || p.id) !== currentUser.id);
+            if (other) handleToggleBlockContact(other);
+          }}
+          isContactBlocked={Boolean(
+            !activeChat?.isGroup &&
+            activeChat?.participants?.find((p) => (p._id || p.id) !== currentUser.id) &&
+            currentUser?.blockedUsers?.some(
+              (id) => (id._id || id).toString() === (activeChat.participants.find((p) => (p._id || p.id) !== currentUser.id)?._id || '').toString()
+            )
+          )}
+        />
+      )}
+
+      {/* Chat Cryptographic Backup & Transcript Modal */}
+      {showChatBackupModal && (chatForBackup || activeChat) && (
+        <ChatBackupModal
+          activeChat={chatForBackup || activeChat}
+          onClose={() => {
+            setShowChatBackupModal(false);
+            setChatForBackup(null);
+          }}
         />
       )}
     </div>

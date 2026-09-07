@@ -202,4 +202,110 @@ exports.clearChatMessages = async (req, res) => {
   }
 };
 
+// Export / Backup chat with cryptographic integrity seal
+exports.backupChat = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user._id;
+    const crypto = require('crypto');
+
+    const chat = await Chat.findById(id)
+      .populate('participants', 'name email avatarUrl publicIdentity statusBio phone')
+      .populate('securitySession');
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found.' });
+    }
+
+    const isParticipant = chat.participants.some(
+      p => p._id.toString() === currentUserId.toString()
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Unauthorized. Not a participant in this chat.' });
+    }
+
+    // Fetch non-deleted messages for current user
+    const messages = await Message.find({
+      chatId: id,
+      deletedForUsers: { $ne: currentUserId }
+    })
+      .populate('senderId', 'name email avatarUrl publicIdentity')
+      .sort({ createdAt: 1 });
+
+    // Format sanitized backup payload
+    const formattedMessages = messages.map(msg => ({
+      messageId: msg._id,
+      sender: {
+        id: msg.senderId?._id || msg.senderId,
+        name: msg.senderId?.name || 'Unknown',
+        email: msg.senderId?.email || '',
+        publicIdentity: msg.senderId?.publicIdentity || ''
+      },
+      content: msg.plaintextPreview || msg.encryptedMessage,
+      mediaUrl: msg.mediaUrl || null,
+      mediaType: msg.mediaType || 'none',
+      mediaFilename: msg.mediaFilename || null,
+      deliveryState: msg.deliveryState,
+      timestamp: msg.createdAt,
+      nonce: msg.nonce,
+      messageHash: msg.messageHash,
+      qdsVerification: {
+        decision: msg.qdsVerification?.decision,
+        detectedAttack: msg.qdsVerification?.detectedAttack,
+        severity: msg.qdsVerification?.severity,
+        mismatchRate: msg.qdsVerification?.mismatchRate,
+        reason: msg.qdsVerification?.reason,
+        chshS: msg.qdsVerification?.chshS,
+        channelStatus: msg.qdsVerification?.channelStatus,
+        qberEstimate: msg.qdsVerification?.qberEstimate
+      }
+    }));
+
+    const metadata = {
+      chatId: chat._id,
+      isGroup: chat.isGroup,
+      name: chat.name || (chat.isGroup ? 'Group Chat' : 'Direct Quantum Chat'),
+      createdAt: chat.createdAt,
+      exportedAt: new Date().toISOString(),
+      exportedBy: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email
+      },
+      e91Status: chat.e91Status,
+      sessionId: chat.securitySession?._id || 'qds_sess_active'
+    };
+
+    // Calculate deterministic SHA-256 seal across all messages and metadata
+    const hashData = JSON.stringify({
+      metadata: { chatId: metadata.chatId, exportedAt: metadata.exportedAt },
+      messages: formattedMessages.map(m => ({ id: m.messageId, hash: m.messageHash, t: m.timestamp }))
+    });
+    const integritySeal = crypto.createHash('sha256').update(hashData).digest('hex');
+
+    const backupPayload = {
+      schemaVersion: '1.0-qds-quantum-backup',
+      integritySeal: `sha256:${integritySeal}`,
+      generatedAt: new Date().toISOString(),
+      metadata,
+      participants: chat.participants.map(p => ({
+        id: p._id,
+        name: p.name,
+        email: p.email,
+        publicIdentity: p.publicIdentity,
+        phone: p.phone || '',
+        statusBio: p.statusBio
+      })),
+      messagesCount: formattedMessages.length,
+      messages: formattedMessages
+    };
+
+    return res.status(200).json({ backup: backupPayload });
+  } catch (error) {
+    console.error('Error creating chat backup:', error);
+    return res.status(500).json({ error: 'Server error creating chat backup.' });
+  }
+};
+
+
 

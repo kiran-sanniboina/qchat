@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'Hey there! I am using QChat with Quantum Digital Signatures.',
   },
+  phone: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   lastSeen: {
     type: Date,
     default: Date.now,

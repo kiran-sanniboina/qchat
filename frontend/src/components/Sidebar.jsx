@@ -10,7 +10,8 @@ import {
   Users,
   Check,
   CheckCheck,
-  Sparkles
+  Sparkles,
+  User
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -20,6 +21,7 @@ export default function Sidebar({
   onSelectChat,
   onOpenNewChatModal,
   onOpenSecurityDashboard,
+  onOpenUserProfile,
   onLogout
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,17 +51,23 @@ export default function Sidebar({
     <div className="w-full md:w-[380px] lg:w-[420px] h-full bg-wa-panel flex flex-col border-r border-wa-border shrink-0 select-none">
       {/* Sidebar Header */}
       <div className="h-16 px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border">
-        {/* Current User Info */}
-        <div className="flex items-center space-x-3">
-          <img
-            src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.email}`}
-            alt={currentUser.name}
-            className="w-10 h-10 rounded-full object-cover border border-wa-border bg-wa-bg"
-          />
+        {/* Current User Info (Clickable for Profile & Details) */}
+        <div
+          onClick={onOpenUserProfile}
+          title="Click to view and edit your profile"
+          className="flex items-center space-x-3 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-wa-hover/70 transition"
+        >
+          <div className="relative">
+            <img
+              src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.email}`}
+              alt={currentUser.name}
+              className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-wa-green transition bg-wa-bg"
+            />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-wa-green ring-2 ring-wa-surface" title="Online" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white leading-tight flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-white leading-tight flex items-center gap-1.5 group-hover:text-wa-green transition">
               {currentUser.name}
-              <span className="w-2 h-2 rounded-full bg-wa-green animate-pulse" title="Online" />
             </span>
             <span className="text-[11px] text-quantum-cyan flex items-center gap-1 font-mono">
               <ShieldCheck className="w-3 h-3 text-wa-green" /> QDS Active
@@ -100,6 +108,12 @@ export default function Sidebar({
           {/* Menu Popup */}
           {showDropdown && (
             <div className="absolute right-0 top-12 w-48 bg-wa-surface rounded-lg shadow-xl border border-wa-border py-1.5 z-50 text-sm text-wa-textPrimary animate-in fade-in zoom-in-95">
+              <button
+                onClick={() => { setShowDropdown(false); onOpenUserProfile(); }}
+                className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-white"
+              >
+                <User className="w-4 h-4 text-wa-green" /> Profile & Details
+              </button>
               <button
                 onClick={() => { setShowDropdown(false); onOpenNewChatModal(); }}
                 className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs"
