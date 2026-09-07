@@ -210,16 +210,16 @@ exports.backupChat = async (req, res) => {
     const crypto = require('crypto');
 
     const chat = await Chat.findById(id)
-      .populate('participants', 'name email avatarUrl publicIdentity statusBio phone')
-      .populate('securitySession');
+      .populate('participants', 'name email avatarUrl publicIdentity statusBio phone');
 
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found.' });
     }
 
-    const isParticipant = chat.participants.some(
-      p => p._id.toString() === currentUserId.toString()
-    );
+    const isParticipant = chat.participants.some(p => {
+      const pid = p?._id ? p._id.toString() : (p ? p.toString() : '');
+      return pid === currentUserId.toString();
+    });
     if (!isParticipant) {
       return res.status(403).json({ error: 'Unauthorized. Not a participant in this chat.' });
     }
@@ -241,7 +241,7 @@ exports.backupChat = async (req, res) => {
         email: msg.senderId?.email || '',
         publicIdentity: msg.senderId?.publicIdentity || ''
       },
-      content: msg.plaintextPreview || msg.encryptedMessage,
+      content: msg.plaintextPreview || (typeof msg.encryptedMessage === 'object' ? (msg.encryptedMessage?.combined || msg.encryptedMessage?.ciphertext || 'Encrypted Message') : String(msg.encryptedMessage || '')),
       mediaUrl: msg.mediaUrl || null,
       mediaType: msg.mediaType || 'none',
       mediaFilename: msg.mediaFilename || null,
@@ -273,7 +273,7 @@ exports.backupChat = async (req, res) => {
         email: req.user.email
       },
       e91Status: chat.e91Status,
-      sessionId: chat.securitySession?._id || 'qds_sess_active'
+      sessionId: chat.activeSessionId || 'qds_sess_active'
     };
 
     // Calculate deterministic SHA-256 seal across all messages and metadata
@@ -288,13 +288,13 @@ exports.backupChat = async (req, res) => {
       integritySeal: `sha256:${integritySeal}`,
       generatedAt: new Date().toISOString(),
       metadata,
-      participants: chat.participants.map(p => ({
-        id: p._id,
-        name: p.name,
-        email: p.email,
-        publicIdentity: p.publicIdentity,
-        phone: p.phone || '',
-        statusBio: p.statusBio
+      participants: (chat.participants || []).map(p => ({
+        id: p?._id || p,
+        name: p?.name || 'User',
+        email: p?.email || '',
+        publicIdentity: p?.publicIdentity || '',
+        phone: p?.phone || '',
+        statusBio: p?.statusBio || ''
       })),
       messagesCount: formattedMessages.length,
       messages: formattedMessages
