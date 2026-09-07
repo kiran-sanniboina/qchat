@@ -21,6 +21,7 @@ import {
   Archive,
   ExternalLink
 } from 'lucide-react';
+import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
 
 export default function ChatProfileModal({
   activeChat,
@@ -38,21 +39,18 @@ export default function ChatProfileModal({
 
   if (!activeChat) return null;
 
+  const myId = String(currentUser?.id || currentUser?._id || '');
   const otherParticipant = activeChat.isGroup
     ? null
-    : activeChat.participants?.find((p) => (p._id || p.id) !== currentUser.id);
-
-  const displayAvatar = activeChat.isGroup
-    ? activeChat.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${activeChat._id}`
-    : (otherParticipant?.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${otherParticipant?.email || 'contact'}`);
-
-  const resolvedAvatar = displayAvatar.startsWith('http')
-    ? displayAvatar
-    : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${displayAvatar}`;
+    : activeChat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
 
   const displayName = activeChat.isGroup
     ? activeChat.name || 'Group Chat'
     : (otherParticipant?.name || 'Quantum Contact');
+
+  const rawAvatar = activeChat.isGroup ? activeChat.avatar : otherParticipant?.avatarUrl;
+  const fallbackSeed = activeChat.isGroup ? activeChat._id : (otherParticipant?.email || displayName);
+  const resolvedAvatar = getResolvedAvatar(rawAvatar, fallbackSeed, displayName);
 
   const e91 = activeChat.e91Status || {
     chshS: 2.828,
@@ -77,12 +75,7 @@ export default function ChatProfileModal({
     }
   };
 
-  const resolveMediaUrl = (url) => {
-    if (!url) return '';
-    return url.startsWith('http')
-      ? url
-      : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${url}`;
-  };
+  const resolveMediaUrl = (url) => getResolvedMediaUrl(url);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none">
@@ -116,6 +109,7 @@ export default function ChatProfileModal({
             <img
               src={resolvedAvatar}
               alt={displayName}
+              onError={(e) => handleAvatarError(e, fallbackSeed, displayName)}
               className="w-24 h-24 rounded-full object-cover border-2 border-wa-border shadow-xl bg-wa-panel"
             />
             {!activeChat.isGroup && (
@@ -433,11 +427,10 @@ export default function ChatProfileModal({
               </div>
               <div className="space-y-2">
                 {activeChat.participants?.map((participant) => {
-                  const isMe = (participant._id || participant.id) === currentUser.id;
-                  const memberAvatar = participant.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${participant.email || 'user'}`;
-                  const resolvedMemberAvatar = memberAvatar.startsWith('http')
-                    ? memberAvatar
-                    : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${memberAvatar}`;
+                  const myParticipantId = String(currentUser?.id || currentUser?._id || '');
+                  const isMe = String(participant?._id || participant?.id || participant) === myParticipantId;
+                  const memberFallbackSeed = participant?.email || participant?.name || 'user';
+                  const resolvedMemberAvatar = getResolvedAvatar(participant?.avatarUrl, memberFallbackSeed, participant?.name);
 
                   return (
                     <div
@@ -448,6 +441,7 @@ export default function ChatProfileModal({
                         <img
                           src={resolvedMemberAvatar}
                           alt={participant.name}
+                          onError={(e) => handleAvatarError(e, memberFallbackSeed, participant.name)}
                           className="w-9 h-9 rounded-full object-cover border border-wa-border bg-wa-panel"
                         />
                         <div>

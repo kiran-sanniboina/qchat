@@ -15,6 +15,7 @@ import {
   Smile
 } from 'lucide-react';
 import api from '../api';
+import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
 
 export default function UserProfileModal({ currentUser, onClose, onUpdateUser }) {
   const [name, setName] = useState(currentUser?.name || '');
@@ -39,24 +40,24 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
       url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser?.email || 'qchat')}`
     },
     {
-      id: 'lorelei',
-      name: 'Cyberpunk',
-      url: `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(name || 'quantum_agent')}`
+      id: 'cyberpunk',
+      name: 'Cyberpunk Qubit',
+      url: `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(currentUser?.name || 'Cyber')}`
     },
     {
-      id: 'avataaars',
-      name: 'Executive',
-      url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || 'agent')}`
+      id: 'executive',
+      name: 'Cryptographer',
+      url: `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(currentUser?.name || 'Director')}`
     },
     {
       id: 'identicon',
-      name: 'Cryptographic',
-      url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(currentUser?.publicIdentity || 'pk_qds')}`
+      name: 'E91 Identicon',
+      url: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(currentUser?.publicIdentity || 'QDS')}`
     },
     {
-      id: 'pixel-art',
-      name: 'Retro Qubit',
-      url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(currentUser?.email || 'qubit')}`
+      id: 'pixel',
+      name: 'Pixel Pauli',
+      url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(currentUser?.name || 'Quantum')}`
     }
   ];
 
@@ -69,11 +70,47 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
   ];
 
   const handleCopyKey = () => {
-    if (currentUser?.publicIdentity) {
-      navigator.clipboard.writeText(currentUser.publicIdentity);
-      setCopiedKey(true);
-      setTimeout(() => setCopiedKey(false), 2000);
-    }
+    if (!currentUser?.publicIdentity) return;
+    navigator.clipboard.writeText(currentUser.publicIdentity);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 256;
+          let width = image.width;
+          let height = image.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(image, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        image.onerror = (err) => reject(err);
+        image.src = readerEvent.target.result;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleFileUpload = async (e) => {
@@ -88,18 +125,20 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
     setUploadingAvatar(true);
     setErrorMsg(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await api.post('/media/upload', formData, {
+      // 1. Immediately create compressed Data URL for persistent storage in MongoDB
+      const compressedDataUrl = await compressImage(file);
+      setAvatarUrl(compressedDataUrl);
+      setSuccessMsg('Profile photo selected and compressed. Click Save to apply.');
+
+      // 2. Also upload to backend /media/upload in background
+      const formData = new FormData();
+      formData.append('file', file);
+      api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      const uploadedUrl = res.data.mediaUrl;
-      setAvatarUrl(uploadedUrl);
-      setSuccessMsg('Profile photo uploaded. Click Save to apply changes.');
+      }).catch((err) => console.warn('Background upload note:', err.message));
     } catch (err) {
-      setErrorMsg('Failed to upload image: ' + (err.response?.data?.error || err.message));
+      setErrorMsg('Failed to process image: ' + err.message);
     } finally {
       setUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -139,12 +178,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
     }
   };
 
-  const currentDisplayAvatar = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser?.email}`;
-
-  // Helper for resolving backend uploads vs absolute URLs
-  const resolvedAvatar = currentDisplayAvatar.startsWith('http')
-    ? currentDisplayAvatar
-    : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${currentDisplayAvatar}`;
+  const resolvedAvatar = getResolvedAvatar(avatarUrl, currentUser?.email, currentUser?.name);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
@@ -176,6 +210,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
               <img
                 src={resolvedAvatar}
                 alt={name}
+                onError={(e) => handleAvatarError(e, currentUser?.email, currentUser?.name)}
                 className="w-24 h-24 rounded-full object-cover border-2 border-wa-border group-hover:border-quantum-cyan transition bg-wa-panel shadow-lg"
               />
               {uploadingAvatar ? (
@@ -269,6 +304,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                       <img
                         src={preset.url}
                         alt={preset.name}
+                        onError={(e) => handleAvatarError(e, preset.id, preset.name)}
                         className="w-full h-10 rounded-lg object-contain"
                       />
                       <span className="block text-[9px] text-center truncate text-wa-textSecondary mt-0.5 group-hover:text-white">

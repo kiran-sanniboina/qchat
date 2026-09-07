@@ -174,7 +174,8 @@ exports.updateProfile = async (req, res) => {
     }
 
     const userData = {
-      id: updatedUser._id,
+      id: updatedUser._id.toString(),
+      _id: updatedUser._id.toString(),
       name: updatedUser.name,
       email: updatedUser.email,
       publicIdentity: updatedUser.publicIdentity,

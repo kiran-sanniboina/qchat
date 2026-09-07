@@ -13,6 +13,7 @@ import {
   Sparkles,
   User
 } from 'lucide-react';
+import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
 
 export default function Sidebar({
   currentUser,
@@ -59,8 +60,9 @@ export default function Sidebar({
         >
           <div className="relative">
             <img
-              src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.email}`}
-              alt={currentUser.name}
+              src={getResolvedAvatar(currentUser?.avatarUrl, currentUser?.email, currentUser?.name)}
+              alt={currentUser?.name || 'User'}
+              onError={(e) => handleAvatarError(e, currentUser?.email, currentUser?.name)}
               className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-wa-green transition bg-wa-bg"
             />
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-wa-green ring-2 ring-wa-surface" title="Online" />
@@ -193,14 +195,15 @@ export default function Sidebar({
         ) : (
           filteredChats.map((chat) => {
             const isSelected = activeChat?._id === chat._id;
+            const myId = String(currentUser?.id || currentUser?._id || '');
             const otherParticipant = chat.isGroup
               ? null
-              : chat.participants?.find((p) => p._id !== currentUser.id);
+              : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
 
             const displayName = chat.isGroup ? chat.name : (otherParticipant?.name || 'Unknown User');
-            const displayAvatar = chat.isGroup
-              ? chat.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${chat._id}`
-              : (otherParticipant?.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${otherParticipant?.email}`);
+            const rawAvatar = chat.isGroup ? chat.avatar : otherParticipant?.avatarUrl;
+            const fallbackSeed = chat.isGroup ? chat._id : (otherParticipant?.email || displayName);
+            const displayAvatar = getResolvedAvatar(rawAvatar, fallbackSeed, displayName);
 
             const lastMsg = chat.lastMessage;
             const isLastMsgRejected = lastMsg?.deliveryState === 'rejected';
@@ -219,6 +222,7 @@ export default function Sidebar({
                   <img
                     src={displayAvatar}
                     alt={displayName}
+                    onError={(e) => handleAvatarError(e, fallbackSeed, displayName)}
                     className="w-12 h-12 rounded-full object-cover bg-wa-surface border border-wa-border"
                   />
                   {!chat.isGroup && otherParticipant?.isOnline && (

@@ -13,7 +13,8 @@ rawBase = rawBase.replace(/\/+$/, '');
 if (!rawBase.endsWith('/api')) {
   rawBase = `${rawBase}/api`;
 }
-const API_BASE = rawBase;
+export const API_BASE = rawBase;
+export const BACKEND_BASE = rawBase.replace(/\/api\/?$/, '');
 
 const api = axios.create({
   baseURL: API_BASE,

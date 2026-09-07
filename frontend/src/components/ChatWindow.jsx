@@ -27,6 +27,7 @@ import {
   User
 } from 'lucide-react';
 import api from '../api';
+import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
 
 export default function ChatWindow({
   activeChat,
@@ -129,15 +130,18 @@ export default function ChatWindow({
     }
   };
 
+  const myId = String(currentUser?.id || currentUser?._id || '');
   const otherParticipant = activeChat?.isGroup
     ? null
-    : activeChat?.participants?.find((p) => p._id !== currentUser.id);
+    : activeChat?.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
+
+  const otherParticipantId = otherParticipant ? String(otherParticipant._id || otherParticipant.id || otherParticipant) : '';
 
   const isContactBlocked = Boolean(
     !activeChat?.isGroup &&
-    otherParticipant &&
+    otherParticipantId &&
     currentUser?.blockedUsers?.some(
-      (id) => (id._id || id).toString() === otherParticipant._id.toString()
+      (id) => String(id?._id || id?.id || id) === otherParticipantId
     )
   );
 
@@ -181,9 +185,9 @@ export default function ChatWindow({
   };
 
   const title = activeChat?.isGroup ? activeChat.name : (otherParticipant?.name || 'Unknown User');
-  const avatar = activeChat?.isGroup
-    ? activeChat.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${activeChat._id}`
-    : (otherParticipant?.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${otherParticipant?.email}`);
+  const rawAvatar = activeChat?.isGroup ? activeChat.avatar : otherParticipant?.avatarUrl;
+  const fallbackSeed = activeChat?.isGroup ? activeChat._id : (otherParticipant?.email || title);
+  const avatar = getResolvedAvatar(rawAvatar, fallbackSeed, title);
 
   const isOtherUserTyping = typingStatus?.chatId === activeChat?._id && typingStatus?.isTyping;
 
@@ -244,6 +248,7 @@ export default function ChatWindow({
             <img
               src={avatar}
               alt={title}
+              onError={(e) => handleAvatarError(e, fallbackSeed, title)}
               className="w-10 h-10 rounded-full object-cover border border-wa-border group-hover:border-quantum-cyan transition bg-wa-bg"
             />
             {!activeChat?.isGroup && (
@@ -414,9 +419,7 @@ export default function ChatWindow({
 
                 {/* Media Attachment Rendering */}
                 {msg.mediaUrl && (() => {
-                  const mediaFullUrl = msg.mediaUrl.startsWith('http')
-                    ? msg.mediaUrl
-                    : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${msg.mediaUrl}`;
+                  const mediaFullUrl = getResolvedMediaUrl(msg.mediaUrl);
 
                   return (
                     <div className="mb-2 rounded overflow-hidden">

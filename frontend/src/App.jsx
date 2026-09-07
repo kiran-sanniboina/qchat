@@ -162,26 +162,29 @@ export default function App() {
 
     // User profile update handler
     const handleUserUpdated = (updatedUser) => {
-      const updatedId = updatedUser.id || updatedUser._id;
-      if (updatedId === currentUser?.id || updatedId === currentUser?._id) {
+      const updatedId = String(updatedUser?.id || updatedUser?._id || '');
+      const currentId = String(currentUser?.id || currentUser?._id || '');
+
+      if (updatedId === currentId) {
         handleUpdateCurrentUser(updatedUser);
       }
       setChats((prev) =>
         prev.map((c) => ({
           ...c,
           participants: c.participants?.map((p) =>
-            (p._id || p.id) === updatedId ? { ...p, ...updatedUser } : p
+            String(p?._id || p?.id || p) === updatedId ? { ...p, ...updatedUser } : p
           )
         }))
       );
-      if (activeChat) {
-        setActiveChat((prev) => ({
+      setActiveChat((prev) => {
+        if (!prev) return prev;
+        return {
           ...prev,
-          participants: prev?.participants?.map((p) =>
-            (p._id || p.id) === updatedId ? { ...p, ...updatedUser } : p
+          participants: prev.participants?.map((p) =>
+            String(p?._id || p?.id || p) === updatedId ? { ...p, ...updatedUser } : p
           )
-        }));
-      }
+        };
+      });
     };
 
     socket.on('message:new', handleNewMessage);

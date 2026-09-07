@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Users, UserPlus, ShieldCheck } from 'lucide-react';
 import api from '../api';
+import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
 
 export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
   const [activeTab, setActiveTab] = useState('direct'); // 'direct' | 'group'
@@ -186,8 +187,9 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
                 >
                   <div className="flex items-center space-x-3">
                     <img
-                      src={u.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.email}`}
+                      src={getResolvedAvatar(u.avatarUrl, u.email, u.name)}
                       alt={u.name}
+                      onError={(e) => handleAvatarError(e, u.email, u.name)}
                       className="w-10 h-10 rounded-full object-cover bg-wa-bg border border-wa-border"
                     />
                     <div>

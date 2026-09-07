@@ -38,10 +38,16 @@ const uploadFile = (req, res) => {
       mediaType = 'audio';
     }
 
-    const mediaUrl = `/uploads/${file.filename}`;
+    const host = req.get('host') || 'localhost:5000';
+    const isProduction = process.env.NODE_ENV === 'production' || host.includes('render.com');
+    const baseUrl = isProduction
+      ? 'https://qchat-backend-8tbz.onrender.com'
+      : `${req.protocol}://${host}`;
+    const mediaUrl = `${baseUrl}/uploads/${file.filename}`;
 
     return res.status(200).json({
       mediaUrl,
+      relativeUrl: `/uploads/${file.filename}`,
       mediaType,
       filename: file.originalname,
       size: file.size,
