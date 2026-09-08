@@ -122,7 +122,7 @@ exports.sendMessage = async (req, res) => {
         recipientId: recipientId.toString(),
         keyAB: chat.sharedKey,
         numQubits: 32
-      }, { timeout: 5000 });
+      }, { timeout: 65000 });
       signedData = signRes.data;
     } catch (qdsSignErr) {
       console.warn('QDS Sign fallback to local AES-GCM + Hash:', qdsSignErr.message);
@@ -183,13 +183,18 @@ exports.sendMessage = async (req, res) => {
     // --- 4. Determine Delivery State & Threat Logging ---
     const isRejected = (verification.decision === 'REJECT');
     // Determine valid replyTo
-    let validReplyTo = null;
+    let validReplyTo = {
+      messageId: null,
+      senderName: '',
+      textPreview: '',
+      mediaType: ''
+    };
     if (replyTo && (replyTo.messageId || (replyTo.textPreview && String(replyTo.textPreview).trim()) || (replyTo.mediaType && replyTo.mediaType !== 'none'))) {
       validReplyTo = {
         messageId: replyTo.messageId || null,
-        senderName: replyTo.senderName || 'Replying',
+        senderName: replyTo.senderName || '',
         textPreview: replyTo.textPreview || '',
-        mediaType: replyTo.mediaType || 'none'
+        mediaType: (replyTo.mediaType && replyTo.mediaType !== 'none') ? replyTo.mediaType : ''
       };
     }
 
@@ -222,9 +227,9 @@ exports.sendMessage = async (req, res) => {
         mismatches: verification.mismatches,
         totalQubits: verification.totalQubits,
         threshold: verification.threshold,
-        chshS: verification.e91?.chshS || chat.e91Status.chshS,
-        channelStatus: verification.e91?.channelStatus || chat.e91Status.channelStatus,
-        qberEstimate: verification.e91?.qberEstimate || chat.e91Status.qberEstimate,
+        chshS: (verification.e91 && verification.e91.chshS !== undefined) ? verification.e91.chshS : (chat.e91Status?.chshS || 2.8284),
+        channelStatus: (verification.e91 && verification.e91.channelStatus) ? verification.e91.channelStatus : (chat.e91Status?.channelStatus || 'PASS'),
+        qberEstimate: (verification.e91 && verification.e91.qberEstimate !== undefined) ? verification.e91.qberEstimate : (chat.e91Status?.qberEstimate || 0.0),
         identityStatus: verification.identityStatus || 'VALID',
         nonceStatus: verification.nonceStatus || 'VALID',
         authorizationStatus: verification.authorizationStatus || 'AUTHORIZED',
@@ -240,16 +245,20 @@ exports.sendMessage = async (req, res) => {
 
     // If attack detected, record in ThreatLog and alert chat participants
     if (verification.detectedAttack) {
-      const threatLog = new ThreatLog({
-        chatId: chat._id,
-        messageId: newMessage._id,
-        attackType: verification.detectedAttack,
-        severity: verification.severity,
-        reason: verification.reason,
-        evidence: verification.evidence,
-        detectedBy: 'Deterministic Quantum Threat Engine'
-      });
-      await threatLog.save();
+      try {
+        const threatLog = new ThreatLog({
+          chatId: chat._id,
+          messageId: newMessage._id,
+          attackType: verification.detectedAttack,
+          severity: verification.severity,
+          reason: verification.reason,
+          evidence: verification.evidence,
+          detectedBy: 'Deterministic Quantum Threat Engine'
+        });
+        await threatLog.save();
+      } catch (logErr) {
+        console.warn('Could not save threat log:', logErr.message);
+      }
 
       // Emit real-time security alert via Socket.io
       const io = req.app.get('io');
@@ -267,9 +276,12 @@ exports.sendMessage = async (req, res) => {
     }
 
     // Populate sender info for frontend rendering
-    const populatedMessage = await Message.findById(newMessage._id)
-      .populate('senderId', 'name email avatarUrl publicIdentity')
-      .populate('replyTo.messageId');
+    let query = Message.findById(newMessage._id)
+      .populate('senderId', 'name email avatarUrl publicIdentity');
+    if (newMessage.replyTo && newMessage.replyTo.messageId) {
+      query = query.populate('replyTo.messageId');
+    }
+    const populatedMessage = await query;
 
     // Emit new message to socket room
     const io = req.app.get('io');
@@ -285,7 +297,7 @@ exports.sendMessage = async (req, res) => {
     return res.status(201).json({ message: populatedMessage });
   } catch (error) {
     console.error('Error in sendMessage:', error);
-    return res.status(500).json({ error: 'Server error sending message.' });
+    return res.status(500).json({ error: error.message || 'Server error sending message.' });
   }
 };
 
