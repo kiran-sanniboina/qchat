@@ -258,3 +258,4 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
     </div>
   );
 }
+

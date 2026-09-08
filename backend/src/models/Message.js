@@ -63,10 +63,13 @@ const messageSchema = new mongoose.Schema({
     default: 0
   },
   replyTo: {
-    messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
-    senderName: { type: String, default: '' },
-    textPreview: { type: String, default: '' },
-    mediaType: { type: String, default: 'none' }
+    type: new mongoose.Schema({
+      messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
+      senderName: { type: String, default: '' },
+      textPreview: { type: String, default: '' },
+      mediaType: { type: String, default: 'none' }
+    }, { _id: false }),
+    default: null
   },
   reactions: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

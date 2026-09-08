@@ -225,6 +225,14 @@ export default function ChatWindow({
   const [deleteModalData, setDeleteModalData] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
 
+  const hasValidReply = (reply) => {
+    if (!reply) return false;
+    const hasMsgId = Boolean(reply.messageId?._id || reply.messageId);
+    const hasText = Boolean(reply.textPreview && typeof reply.textPreview === 'string' && reply.textPreview.trim().length > 0);
+    const hasMedia = Boolean(reply.mediaType && reply.mediaType !== 'none');
+    return hasMsgId || hasText || hasMedia;
+  };
+
   const fileInputRef = useRef(null);
   const docInputRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -338,7 +346,7 @@ export default function ChatWindow({
     try {
       await onSendMessage({
         message: messageText,
-        replyTo: currentReply || undefined,
+        replyTo: hasValidReply(currentReply) ? currentReply : undefined,
         simulateAttack: attackSim
       });
     } catch (err) {
@@ -372,7 +380,7 @@ export default function ChatWindow({
         mediaType,
         mediaFilename: filename,
         fileSize: size || file.size,
-        replyTo: replyingTo || undefined,
+        replyTo: hasValidReply(replyingTo) ? replyingTo : undefined,
         simulateAttack: selectedAttack || undefined
       });
       setReplyingTo(null);
@@ -393,7 +401,7 @@ export default function ChatWindow({
         message: '',
         mediaType: 'location',
         locationData,
-        replyTo: replyingTo || undefined,
+        replyTo: hasValidReply(replyingTo) ? replyingTo : undefined,
         simulateAttack: selectedAttack || undefined
       });
       setReplyingTo(null);
@@ -410,7 +418,7 @@ export default function ChatWindow({
         message: '',
         mediaType: 'contact',
         contactData,
-        replyTo: replyingTo || undefined,
+        replyTo: hasValidReply(replyingTo) ? replyingTo : undefined,
         simulateAttack: selectedAttack || undefined
       });
       setReplyingTo(null);
@@ -425,7 +433,7 @@ export default function ChatWindow({
     try {
       await onSendMessage({
         ...voicePayload,
-        replyTo: replyingTo || undefined,
+        replyTo: hasValidReply(replyingTo) ? replyingTo : undefined,
         simulateAttack: selectedAttack || undefined
       });
       setShowVoiceRecorder(false);
@@ -442,7 +450,7 @@ export default function ChatWindow({
       await onSendMessage({
         message: `${sticker.visual} ${sticker.title} - ${sticker.subtitle}`,
         mediaType: 'sticker',
-        replyTo: replyingTo || undefined,
+        replyTo: hasValidReply(replyingTo) ? replyingTo : undefined,
         simulateAttack: selectedAttack || undefined
       });
       setShowEmojiPicker(false);
@@ -1115,7 +1123,7 @@ export default function ChatWindow({
                 )}
 
                 {/* Quoted Message Box (Reply to) */}
-                {msg.replyTo && (msg.replyTo.textPreview || msg.replyTo.mediaType) && (
+                {hasValidReply(msg.replyTo) && (
                   <div
                     onClick={() => {
                       const quoteId = msg.replyTo.messageId?._id || msg.replyTo.messageId;
@@ -1132,7 +1140,7 @@ export default function ChatWindow({
                       {msg.replyTo.senderName || 'Replying'}
                     </span>
                     <span className="text-wa-textSecondary line-clamp-2 text-[11px]">
-                      {msg.replyTo.textPreview || `[${msg.replyTo.mediaType}]`}
+                      {msg.replyTo.textPreview || (msg.replyTo.mediaType && msg.replyTo.mediaType !== 'none' ? `[${msg.replyTo.mediaType}]` : '')}
                     </span>
                   </div>
                 )}

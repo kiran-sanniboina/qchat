@@ -177,3 +177,4 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
     </div>
   );
 }
+

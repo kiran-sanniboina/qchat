@@ -234,3 +234,4 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
     </div>
   );
 }
+

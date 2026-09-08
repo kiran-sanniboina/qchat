@@ -182,7 +182,16 @@ exports.sendMessage = async (req, res) => {
 
     // --- 4. Determine Delivery State & Threat Logging ---
     const isRejected = (verification.decision === 'REJECT');
-    const deliveryState = isRejected ? 'rejected' : 'verified';
+    // Determine valid replyTo
+    let validReplyTo = null;
+    if (replyTo && (replyTo.messageId || (replyTo.textPreview && String(replyTo.textPreview).trim()) || (replyTo.mediaType && replyTo.mediaType !== 'none'))) {
+      validReplyTo = {
+        messageId: replyTo.messageId || null,
+        senderName: replyTo.senderName || 'Replying',
+        textPreview: replyTo.textPreview || '',
+        mediaType: replyTo.mediaType || 'none'
+      };
+    }
 
     const newMessage = new Message({
       chatId: chat._id,
@@ -198,7 +207,7 @@ exports.sendMessage = async (req, res) => {
       mediaType: mediaType || 'none',
       mediaFilename: mediaFilename || null,
       fileSize: fileSize || 0,
-      replyTo: replyTo || undefined,
+      replyTo: validReplyTo,
       locationData: locationData || undefined,
       contactData: contactData || undefined,
       isForwarded: Boolean(isForwarded),
