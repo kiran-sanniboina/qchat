@@ -4,6 +4,7 @@ const chatController = require('../controllers/chatController');
 const messageController = require('../controllers/messageController');
 const auth = require('../middleware/auth');
 
+router.get('/storage/overview', auth, chatController.getStorageUsage);
 router.get('/', auth, chatController.getUserChats);
 router.post('/', auth, chatController.createChat);
 router.get('/:id', auth, chatController.getChatById);
@@ -11,6 +12,10 @@ router.get('/:id/messages', auth, messageController.getChatMessages);
 router.put('/:id/read', auth, messageController.markAsRead);
 router.put('/:id/clear', auth, chatController.clearChatMessages);
 router.get('/:id/backup', auth, chatController.backupChat);
+router.post('/:id/restore', auth, chatController.restoreChatBackup);
+router.put('/:id/pin', auth, chatController.togglePinChat);
+router.put('/:id/mute', auth, chatController.toggleMuteChat);
+router.delete('/:id/storage', auth, chatController.clearChatStorage);
 
 module.exports = router;
 

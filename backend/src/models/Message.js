@@ -51,12 +51,56 @@ const messageSchema = new mongoose.Schema({
   },
   mediaType: {
     type: String,
-    enum: ['none', 'image', 'audio', 'document'],
+    enum: ['none', 'image', 'video', 'audio', 'voice', 'document', 'location', 'contact', 'sticker', 'gif'],
     default: 'none'
   },
   mediaFilename: {
     type: String,
     default: null
+  },
+  fileSize: {
+    type: Number,
+    default: 0
+  },
+  replyTo: {
+    messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
+    senderName: { type: String, default: '' },
+    textPreview: { type: String, default: '' },
+    mediaType: { type: String, default: 'none' }
+  },
+  reactions: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: { type: String, default: '' },
+    emoji: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  starredBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  editedAt: {
+    type: Date,
+    default: null
+  },
+  locationData: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+    address: { type: String, default: '' },
+    name: { type: String, default: '' }
+  },
+  contactData: {
+    name: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    email: { type: String, default: '' },
+    avatarUrl: { type: String, default: '' }
+  },
+  isForwarded: {
+    type: Boolean,
+    default: false
   },
   deliveryState: {
     type: String,

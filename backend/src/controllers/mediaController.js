@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 25 * 1024 * 1024 } // 25MB max
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB max
 });
 
 const uploadFile = (req, res) => {
@@ -34,8 +34,11 @@ const uploadFile = (req, res) => {
     let mediaType = 'document';
     if (file.mimetype.startsWith('image/')) {
       mediaType = 'image';
+    } else if (file.mimetype.startsWith('video/')) {
+      mediaType = 'video';
     } else if (file.mimetype.startsWith('audio/')) {
-      mediaType = 'audio';
+      const isVoice = req.body.isVoice === 'true' || req.query.isVoice === 'true' || file.originalname.toLowerCase().includes('voice');
+      mediaType = isVoice ? 'voice' : 'audio';
     }
 
     const host = req.get('host') || 'localhost:5000';

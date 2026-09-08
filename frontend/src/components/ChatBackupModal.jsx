@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import api from '../api';
 
-export default function ChatBackupModal({ activeChat, onClose }) {
+export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess }) {
   const [activeTab, setActiveTab] = useState('export'); // 'export' | 'inspect'
   const [loading, setLoading] = useState(true);
   const [backupData, setBackupData] = useState(null);
@@ -28,6 +28,8 @@ export default function ChatBackupModal({ activeChat, onClose }) {
   const [inspectResult, setInspectResult] = useState(null);
   const [inspectError, setInspectError] = useState(null);
   const [verifyingSeal, setVerifyingSeal] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreStatus, setRestoreStatus] = useState(null);
 
   useEffect(() => {
     if (activeChat?._id) {
@@ -160,6 +162,35 @@ export default function ChatBackupModal({ activeChat, onClose }) {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!inspectResult?.parsed || inspectResult.isTampered) {
+      alert('Cannot restore a tampered or invalid backup.');
+      return;
+    }
+
+    if (!activeChat?._id) {
+      alert('No active chat selected.');
+      return;
+    }
+
+    setRestoring(true);
+    setRestoreStatus(null);
+
+    try {
+      const res = await api.post(`/chats/${activeChat._id}/restore`, {
+        backup: inspectResult.parsed
+      });
+      setRestoreStatus(`Successfully restored ${res.data.restoredCount} messages!`);
+      if (onRestoreSuccess) {
+        onRestoreSuccess(activeChat._id);
+      }
+    } catch (err) {
+      alert('Failed to restore backup: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setRestoring(false);
+    }
   };
 
   return (
@@ -433,6 +464,41 @@ export default function ChatBackupModal({ activeChat, onClose }) {
                       ))}
                     </div>
                   </div>
+
+                  {/* Restore to Chat Option */}
+                  {!inspectResult.isTampered && (
+                    <div className="pt-3 border-t border-wa-border flex flex-col sm:flex-row items-center justify-between gap-2">
+                      <div>
+                        {restoreStatus ? (
+                          <span className="text-wa-green font-semibold text-xs flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4" /> {restoreStatus}
+                          </span>
+                        ) : (
+                          <span className="text-wa-textSecondary text-[11px]">
+                            Import and restore messages into this conversation
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRestoreBackup}
+                        disabled={restoring}
+                        className="w-full sm:w-auto px-4 py-2 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        {restoring ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Restoring...</span>
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-4 h-4" />
+                            <span>Restore to Conversation</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

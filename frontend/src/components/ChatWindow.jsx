@@ -11,6 +11,11 @@ import {
   AlertTriangle,
   FileText,
   Image as ImageIcon,
+  Video,
+  Mic,
+  Music,
+  Play,
+  Pause,
   Radio,
   Lock,
   Download,
@@ -29,15 +34,155 @@ import {
   ArrowLeftRight,
   Search,
   MessageSquarePlus,
-  Settings
+  Settings,
+  MapPin,
+  Phone,
+  Mail,
+  Star,
+  CornerUpLeft,
+  Copy,
+  Edit3,
+  Forward,
+  Sparkles,
+  ExternalLink,
+  ChevronDown,
+  CheckCircle2,
+  HardDrive
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, getResolvedMediaUrl, handleAvatarError } from '../utils/avatarHelper';
+import VoiceRecorder from './VoiceRecorder';
+import EmojiStickerPicker from './EmojiStickerPicker';
+import LocationShareModal from './LocationShareModal';
+import ContactShareModal from './ContactShareModal';
+import ForwardModal from './ForwardModal';
+
+// Audio and Voice Note Player Subcomponent
+function AudioMessagePlayer({ url, isVoice, filename }) {
+  const [playing, setPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const audioRef = useRef(null);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e) => {
+    const val = parseFloat(e.target.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = val;
+      setCurrentTime(val);
+    }
+  };
+
+  const formatTime = (secs) => {
+    if (!secs || isNaN(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="flex items-center space-x-2.5 p-2 bg-black/25 rounded-xl max-w-xs min-w-[210px] border border-white/10 my-1">
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => setPlaying(false)}
+      />
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="w-8 h-8 rounded-full bg-wa-green hover:bg-wa-greenHover text-white flex items-center justify-center shrink-0 shadow transition active:scale-95"
+      >
+        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+      </button>
+
+      <div className="flex-1 min-w-0 flex flex-col justify-center space-y-1">
+        <input
+          type="range"
+          min="0"
+          max={duration || 1}
+          step="0.1"
+          value={currentTime}
+          onChange={handleSeek}
+          className="w-full accent-wa-green h-1.5 bg-white/20 rounded-lg cursor-pointer"
+        />
+        <div className="flex items-center justify-between text-[10px] text-wa-textSecondary font-mono">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      <div className="p-1.5 rounded-full bg-white/10 text-quantum-cyan shrink-0" title={isVoice ? 'Voice Note' : 'Audio'}>
+        {isVoice ? <Mic className="w-3.5 h-3.5 text-wa-green" /> : <Music className="w-3.5 h-3.5 text-quantum-cyan" />}
+      </div>
+    </div>
+  );
+}
+
+// Lightbox Image Preview Modal
+function LightboxModal({ url, filename, onClose }) {
+  if (!url) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-in fade-in select-none"
+      onClick={onClose}
+    >
+      <div className="absolute top-4 right-4 flex items-center space-x-3 z-10" onClick={(e) => e.stopPropagation()}>
+        <a
+          href={url}
+          download={filename || 'image'}
+          target="_blank"
+          rel="noreferrer"
+          className="p-2.5 bg-wa-panel hover:bg-wa-hover text-white rounded-full transition shadow"
+          title="Download full size"
+        >
+          <Download className="w-5 h-5" />
+        </a>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2.5 bg-wa-panel hover:bg-wa-hover text-white rounded-full transition shadow"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <img
+        src={url}
+        alt="Preview"
+        className="max-h-[85vh] max-w-[92vw] object-contain rounded-xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+}
 
 export default function ChatWindow({
   activeChat,
   currentUser,
-  messages,
+  messages = [],
   typingStatus,
   chats = [],
   onSelectChat,
@@ -50,6 +195,8 @@ export default function ChatWindow({
   onOpenChatProfile,
   onOpenUserProfile,
   onOpenBackup,
+  onOpenStorageManager,
+  onOpenStarredMessages,
   onBack
 }) {
   const [inputText, setInputText] = useState('');
@@ -64,6 +211,27 @@ export default function ChatWindow({
   const [showQuickSwitcher, setShowQuickSwitcher] = useState(false);
   const [quickSwitcherSearch, setQuickSwitcherSearch] = useState('');
 
+  // Rich Media & Modern Actions State
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [messageToForward, setMessageToForward] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
+  const [activeBubbleMenuId, setActiveBubbleMenuId] = useState(null);
+  const [deleteModalData, setDeleteModalData] = useState(null);
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const fileInputRef = useRef(null);
+  const docInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const menuRef = useRef(null);
+  const attachMenuRef = useRef(null);
+
   // Touch swipe gesture handling for mobile: swipe right from edge to go back
   const touchStartXRef = useRef(0);
   const touchStartYRef = useRef(0);
@@ -76,7 +244,6 @@ export default function ChatWindow({
     touchStartXRef.current = touch.clientX;
     touchStartYRef.current = touch.clientY;
     touchStartTimeRef.current = Date.now();
-    // Only arm swipe if started within 85px of left screen edge
     isSwipingRef.current = touch.clientX < 85;
   };
 
@@ -87,23 +254,23 @@ export default function ChatWindow({
     const deltaY = touch.clientY - touchStartYRef.current;
     const deltaTime = Date.now() - touchStartTimeRef.current;
 
-    // Trigger back if swiped right by at least 70px horizontally, low vertical drift, under 450ms
     if (deltaX > 70 && Math.abs(deltaY) < 60 && deltaTime < 450) {
       onBack();
     }
     isSwipingRef.current = false;
   };
 
-  const fileInputRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const messagesEndRef = useRef(null);
-  const menuRef = useRef(null);
-
-  // Close menu on click outside
+  // Close menus on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowMenu(false);
+      }
+      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target)) {
+        setShowAttachMenu(false);
+      }
+      if (!e.target.closest('.bubble-menu-container')) {
+        setActiveBubbleMenuId(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -119,7 +286,6 @@ export default function ChatWindow({
     }
   };
 
-  // Pin window & document scroll to top on chat switch to prevent header clipping
   useEffect(() => {
     window.scrollTo(0, 0);
     if (document.body) document.body.scrollTop = 0;
@@ -131,36 +297,66 @@ export default function ChatWindow({
     scrollToBottom(true);
   }, [messages?.length, typingStatus]);
 
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  // Send or Edit Message
   const handleSend = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!inputText.trim() || sending) return;
+
+    // Handle Edit Mode Save
+    if (editingMessage) {
+      try {
+        setSending(true);
+        await api.put(`/messages/${editingMessage._id}`, {
+          message: inputText.trim()
+        });
+        setEditingMessage(null);
+        setInputText('');
+        showToast('Message updated');
+      } catch (err) {
+        alert('Failed to edit message: ' + (err.response?.data?.error || err.message));
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
 
     const messageText = inputText.trim();
     const attackSim = selectedAttack || undefined;
+    const currentReply = replyingTo;
 
     setSending(true);
     setInputText('');
     setSelectedAttack('');
     setShowAttackPicker(false);
+    setReplyingTo(null);
 
     try {
       await onSendMessage({
         message: messageText,
+        replyTo: currentReply || undefined,
         simulateAttack: attackSim
       });
     } catch (err) {
       setInputText(messageText);
+      setReplyingTo(currentReply);
       if (attackSim) setSelectedAttack(attackSim);
     } finally {
       setSending(false);
     }
   };
 
+  // Upload Media
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
+    setShowAttachMenu(false);
     const formData = new FormData();
     formData.append('file', file);
 
@@ -169,20 +365,155 @@ export default function ChatWindow({
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      const { mediaUrl, mediaType, filename } = res.data;
-      onSendMessage({
+      const { mediaUrl, mediaType, filename, size } = res.data;
+      await onSendMessage({
         message: '',
         mediaUrl,
         mediaType,
         mediaFilename: filename,
+        fileSize: size || file.size,
+        replyTo: replyingTo || undefined,
         simulateAttack: selectedAttack || undefined
       });
+      setReplyingTo(null);
       setSelectedAttack('');
     } catch (err) {
       alert('Upload failed: ' + (err.response?.data?.error || err.message));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      if (docInputRef.current) docInputRef.current.value = '';
+    }
+  };
+
+  // Send Location
+  const handleSendLocation = async (locationData) => {
+    try {
+      await onSendMessage({
+        message: '',
+        mediaType: 'location',
+        locationData,
+        replyTo: replyingTo || undefined,
+        simulateAttack: selectedAttack || undefined
+      });
+      setReplyingTo(null);
+      setSelectedAttack('');
+    } catch (err) {
+      alert('Failed to share location: ' + err.message);
+    }
+  };
+
+  // Send Contact
+  const handleSendContact = async (contactData) => {
+    try {
+      await onSendMessage({
+        message: '',
+        mediaType: 'contact',
+        contactData,
+        replyTo: replyingTo || undefined,
+        simulateAttack: selectedAttack || undefined
+      });
+      setReplyingTo(null);
+      setSelectedAttack('');
+    } catch (err) {
+      alert('Failed to share contact: ' + err.message);
+    }
+  };
+
+  // Send Voice Message
+  const handleSendVoice = async (voicePayload) => {
+    try {
+      await onSendMessage({
+        ...voicePayload,
+        replyTo: replyingTo || undefined,
+        simulateAttack: selectedAttack || undefined
+      });
+      setShowVoiceRecorder(false);
+      setReplyingTo(null);
+      setSelectedAttack('');
+    } catch (err) {
+      alert('Failed to send voice note: ' + err.message);
+    }
+  };
+
+  // Send Sticker
+  const handleSelectSticker = async (sticker) => {
+    try {
+      await onSendMessage({
+        message: `${sticker.visual} ${sticker.title} - ${sticker.subtitle}`,
+        mediaType: 'sticker',
+        replyTo: replyingTo || undefined,
+        simulateAttack: selectedAttack || undefined
+      });
+      setShowEmojiPicker(false);
+      setReplyingTo(null);
+    } catch (err) {
+      alert('Failed to send sticker: ' + err.message);
+    }
+  };
+
+  // Emoji selection from picker
+  const handleSelectEmoji = (emoji) => {
+    setInputText((prev) => prev + emoji);
+  };
+
+  // Quick Emoji Reaction
+  const handleReact = async (msgId, emoji) => {
+    setActiveBubbleMenuId(null);
+    try {
+      await api.put(`/messages/${msgId}/react`, { emoji });
+    } catch (err) {
+      console.error('Failed to react:', err);
+    }
+  };
+
+  // Toggle Star
+  const handleToggleStar = async (msgId) => {
+    setActiveBubbleMenuId(null);
+    try {
+      const res = await api.put(`/messages/${msgId}/star`);
+      showToast(res.data.isStarred ? 'Message starred ⭐' : 'Message unstarred');
+    } catch (err) {
+      alert('Failed to toggle star: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  // Copy Message Text
+  const handleCopy = (text) => {
+    setActiveBubbleMenuId(null);
+    navigator.clipboard.writeText(text);
+    showToast('Message copied to clipboard');
+  };
+
+  // Start Quoted Reply
+  const handleStartReply = (msg) => {
+    setActiveBubbleMenuId(null);
+    setReplyingTo({
+      messageId: msg._id,
+      senderName: msg.senderId?.name || 'User',
+      textPreview: msg.plaintextPreview || `[Media: ${msg.mediaType}]`,
+      mediaType: msg.mediaType
+    });
+  };
+
+  // Start Edit
+  const handleStartEdit = (msg) => {
+    setActiveBubbleMenuId(null);
+    setEditingMessage(msg);
+    setInputText(msg.plaintextPreview || '');
+  };
+
+  // Delete Message
+  const handleDeleteMessage = async (deleteForEveryone) => {
+    if (!deleteModalData) return;
+    try {
+      await api.delete(`/messages/${deleteModalData.messageId}`, {
+        data: { deleteForEveryone }
+      });
+      setDeleteModalData(null);
+      showToast(deleteForEveryone ? 'Deleted for everyone' : 'Deleted for you');
+    } catch (err) {
+      alert('Failed to delete: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -249,7 +580,7 @@ export default function ChatWindow({
 
   const renderDeliveryIcon = (msg) => {
     const state = msg.deliveryState;
-    const isSender = msg.senderId?._id === currentUser.id || msg.senderId === currentUser.id;
+    const isSender = String(msg.senderId?._id || msg.senderId) === myId;
 
     if (state === 'rejected') {
       return (
@@ -279,12 +610,12 @@ export default function ChatWindow({
 
     if (isSender) {
       if (state === 'read') {
-        return <CheckCheck className="w-3.5 h-3.5 text-sky-400" />;
+        return <CheckCheck className="w-3.5 h-3.5 text-sky-400" title="Read" />;
       }
       if (state === 'delivered') {
-        return <CheckCheck className="w-3.5 h-3.5 text-wa-textSecondary" />;
+        return <CheckCheck className="w-3.5 h-3.5 text-wa-textSecondary" title="Delivered" />;
       }
-      return <Check className="w-3.5 h-3.5 text-wa-textSecondary" />;
+      return <Check className="w-3.5 h-3.5 text-wa-textSecondary" title="Sent" />;
     }
 
     return null;
@@ -298,12 +629,28 @@ export default function ChatWindow({
     return name.toLowerCase().includes(quickSwitcherSearch.toLowerCase());
   });
 
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   return (
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       className="flex-1 h-full w-full flex flex-col bg-wa-bg relative select-none min-h-0 overflow-hidden"
     >
+      {/* Real-time Toast Confirmation */}
+      {toastMsg && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-wa-panel border border-wa-border text-white text-xs rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-wa-green" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
       {/* Chat Window Header */}
       <div className="h-14 sm:h-16 px-3 sm:px-4 bg-wa-surface flex items-center justify-between border-b border-wa-border shrink-0 z-20">
         <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
@@ -429,6 +776,32 @@ export default function ChatWindow({
                   <span>{activeChat?.isGroup ? 'Group Details' : 'Contact Info & Security'}</span>
                 </button>
 
+                {onOpenStorageManager && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onOpenStorageManager();
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  >
+                    <HardDrive className="w-4 h-4 text-quantum-cyan" />
+                    <span>Storage Manager</span>
+                  </button>
+                )}
+
+                {onOpenStarredMessages && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onOpenStarredMessages();
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  >
+                    <Star className="w-4 h-4 fill-amber-400/40 text-amber-400" />
+                    <span>Starred Messages</span>
+                  </button>
+                )}
+
                 {onOpenUserProfile && (
                   <button
                     onClick={() => {
@@ -450,7 +823,7 @@ export default function ChatWindow({
                   className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
                 >
                   <Archive className="w-4 h-4 text-quantum-cyan" />
-                  <span>Backup Chat</span>
+                  <span>Backup & Restore</span>
                 </button>
 
                 <div className="border-t border-wa-border my-1" />
@@ -559,7 +932,6 @@ export default function ChatWindow({
             })}
           </div>
 
-          {/* Quick Switch Drawer Button */}
           <button
             type="button"
             onClick={() => setShowQuickSwitcher(true)}
@@ -585,23 +957,156 @@ export default function ChatWindow({
 
         {/* Messages List */}
         {messages.map((msg) => {
-          const isSender = msg.senderId?._id === currentUser.id || msg.senderId === currentUser.id;
+          const isSender = String(msg.senderId?._id || msg.senderId) === myId;
           const isRejected = msg.deliveryState === 'rejected';
+          const isStarred = (msg.starredBy || []).some((uid) => String(uid?._id || uid) === myId);
+          const isMenuOpen = activeBubbleMenuId === msg._id;
+          const canEdit = isSender && !msg.isDeletedForEveryone && (Date.now() - new Date(msg.createdAt).getTime() <= 15 * 60 * 1000);
+
+          // Aggregate emoji reaction counts
+          const reactionCounts = {};
+          (msg.reactions || []).forEach((r) => {
+            reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+          });
 
           return (
             <div
               key={msg._id}
-              className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} group`}
+              id={`msg-${msg._id}`}
+              className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} group relative`}
             >
+              {/* Floating Quick Action Toolbar (Reactions & Menu) */}
               <div
-                className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 text-sm shadow relative transition ${
+                className={`opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute -top-8 ${
+                  isSender ? 'right-2' : 'left-2'
+                } z-10 flex items-center bg-wa-surface/95 border border-wa-border rounded-full px-1.5 py-0.5 shadow-xl space-x-0.5 bubble-menu-container`}
+              >
+                {/* 6 Quick Reactions */}
+                {['👍', '❤️', '😂', '😮', '😢', '🙏'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleReact(msg._id, emoji)}
+                    className="hover:scale-125 transition-transform p-1 text-sm rounded-full"
+                    title={`React ${emoji}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+
+                <div className="h-3 w-[1px] bg-wa-border mx-0.5" />
+
+                {/* Reply */}
+                <button
+                  type="button"
+                  onClick={() => handleStartReply(msg)}
+                  className="p-1 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition"
+                  title="Reply"
+                >
+                  <CornerUpLeft className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Star */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleStar(msg._id)}
+                  className={`p-1 rounded-full hover:bg-wa-hover transition ${isStarred ? 'text-amber-400' : 'text-wa-textSecondary hover:text-white'}`}
+                  title={isStarred ? 'Unstar' : 'Star message'}
+                >
+                  <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-400' : ''}`} />
+                </button>
+
+                {/* Bubble Menu Toggle */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveBubbleMenuId(isMenuOpen ? null : msg._id)}
+                    className="p-1 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition"
+                    title="More actions"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Bubble Menu Popup */}
+                  {isMenuOpen && (
+                    <div className="absolute right-0 top-7 w-36 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-white animate-in fade-in zoom-in-95">
+                      <button
+                        type="button"
+                        onClick={() => handleStartReply(msg)}
+                        className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2"
+                      >
+                        <CornerUpLeft className="w-3.5 h-3.5 text-quantum-cyan" /> Reply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveBubbleMenuId(null);
+                          setMessageToForward(msg);
+                        }}
+                        className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2"
+                      >
+                        <Forward className="w-3.5 h-3.5 text-quantum-cyan" /> Forward
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(msg.plaintextPreview)}
+                        className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-wa-textSecondary" /> Copy text
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStar(msg._id)}
+                        className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2 text-amber-400"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-amber-400/30" /> {isStarred ? 'Unstar' : 'Star message'}
+                      </button>
+
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(msg)}
+                          className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2 text-wa-green"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-wa-green" /> Edit message
+                        </button>
+                      )}
+
+                      <div className="border-t border-wa-border my-1" />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveBubbleMenuId(null);
+                          setDeleteModalData({ messageId: msg._id, isSender });
+                        }}
+                        className="w-full px-3 py-1.5 text-left hover:bg-wa-hover flex items-center gap-2 text-red-400"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete...
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Message Bubble */}
+              <div
+                className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3.5 py-2 text-sm shadow-md relative transition ${
                   isRejected
-                    ? 'bg-red-950/60 border border-red-500/50 text-red-200'
+                    ? 'bg-red-950/70 border border-red-500/50 text-red-200'
                     : isSender
-                    ? 'bg-wa-outgoing text-white'
-                    : 'bg-wa-incoming text-white'
+                    ? 'bg-wa-outgoing text-white rounded-tr-none'
+                    : 'bg-wa-incoming text-white rounded-tl-none'
                 }`}
               >
+                {/* Forwarded Header */}
+                {msg.isForwarded && (
+                  <div className="text-[10px] italic text-wa-textSecondary flex items-center gap-1 mb-1">
+                    <Forward className="w-3 h-3 text-wa-textSecondary" />
+                    <span>Forwarded</span>
+                  </div>
+                )}
+
                 {/* Sender Name in Group Chat */}
                 {activeChat?.isGroup && !isSender && (
                   <div className="text-[11px] font-semibold text-quantum-cyan mb-1">
@@ -609,44 +1114,197 @@ export default function ChatWindow({
                   </div>
                 )}
 
-                {/* Media Attachment Rendering */}
-                {msg.mediaUrl && (() => {
-                  const mediaFullUrl = getResolvedMediaUrl(msg.mediaUrl);
+                {/* Quoted Message Box (Reply to) */}
+                {msg.replyTo && (msg.replyTo.textPreview || msg.replyTo.mediaType) && (
+                  <div
+                    onClick={() => {
+                      const quoteId = msg.replyTo.messageId?._id || msg.replyTo.messageId;
+                      if (quoteId) {
+                        const target = document.getElementById(`msg-${quoteId}`);
+                        if (target) {
+                          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }
+                    }}
+                    className="p-2 mb-2 rounded-lg bg-black/30 border-l-4 border-wa-green cursor-pointer hover:bg-black/40 transition text-xs"
+                  >
+                    <span className="font-bold text-wa-green block text-[11px]">
+                      {msg.replyTo.senderName || 'Replying'}
+                    </span>
+                    <span className="text-wa-textSecondary line-clamp-2 text-[11px]">
+                      {msg.replyTo.textPreview || `[${msg.replyTo.mediaType}]`}
+                    </span>
+                  </div>
+                )}
 
+                {/* Rich Media: Images */}
+                {msg.mediaUrl && msg.mediaType === 'image' && (() => {
+                  const fullUrl = getResolvedMediaUrl(msg.mediaUrl);
                   return (
-                    <div className="mb-2 rounded overflow-hidden">
-                      {msg.mediaType === 'image' ? (
-                        <img
-                          src={mediaFullUrl}
-                          alt="attachment"
-                          className="max-h-60 rounded object-cover cursor-pointer hover:opacity-95 transition"
-                          onClick={() => window.open(mediaFullUrl, '_blank')}
-                        />
-                      ) : (
-                        <a
-                          href={mediaFullUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-2 p-2 bg-wa-bg/60 rounded border border-wa-border text-xs hover:bg-wa-bg transition"
-                        >
-                          <FileText className="w-5 h-5 text-quantum-cyan shrink-0" />
-                          <span className="truncate max-w-xs">{msg.mediaFilename || 'Download Attachment'}</span>
-                          <Download className="w-4 h-4 text-wa-textSecondary ml-auto" />
-                        </a>
-                      )}
+                    <div className="mb-2 rounded-xl overflow-hidden cursor-pointer group/img relative">
+                      <img
+                        src={fullUrl}
+                        alt="attachment"
+                        className="max-h-72 w-full object-cover rounded-xl hover:scale-[1.01] transition duration-200"
+                        onClick={() => setLightboxImage({ url: fullUrl, filename: msg.mediaFilename })}
+                      />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center pointer-events-none">
+                        <span className="p-2 rounded-full bg-black/60 text-white text-xs flex items-center gap-1 font-semibold">
+                          <ImageIcon className="w-3.5 h-3.5" /> View
+                        </span>
+                      </div>
                     </div>
                   );
                 })()}
 
-                {/* Message Body */}
-                {msg.isDeletedForEveryone ? (
-                  <span className="italic text-wa-textSecondary/80 text-xs">
-                    This message was deleted
-                  </span>
-                ) : (
-                  <div className="break-words leading-relaxed whitespace-pre-wrap">
-                    {msg.plaintextPreview}
+                {/* Rich Media: Videos */}
+                {msg.mediaUrl && msg.mediaType === 'video' && (() => {
+                  const fullUrl = getResolvedMediaUrl(msg.mediaUrl);
+                  return (
+                    <div className="mb-2 rounded-xl overflow-hidden bg-black">
+                      <video
+                        controls
+                        playsInline
+                        src={fullUrl}
+                        className="max-h-72 w-full rounded-xl object-contain bg-black"
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* Rich Media: Voice Notes & Audio */}
+                {msg.mediaUrl && (msg.mediaType === 'voice' || msg.mediaType === 'audio') && (() => {
+                  const fullUrl = getResolvedMediaUrl(msg.mediaUrl);
+                  return (
+                    <AudioMessagePlayer
+                      url={fullUrl}
+                      isVoice={msg.mediaType === 'voice'}
+                      filename={msg.mediaFilename}
+                    />
+                  );
+                })()}
+
+                {/* Rich Media: Documents */}
+                {msg.mediaUrl && msg.mediaType === 'document' && (() => {
+                  const fullUrl = getResolvedMediaUrl(msg.mediaUrl);
+                  return (
+                    <a
+                      href={fullUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2.5 p-2.5 bg-black/25 rounded-xl border border-white/10 hover:bg-black/35 transition my-1"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-semibold text-white block truncate text-xs">
+                          {msg.mediaFilename || 'Download Document'}
+                        </span>
+                        {msg.fileSize > 0 && (
+                          <span className="text-[10px] text-wa-textSecondary block font-mono">
+                            {formatFileSize(msg.fileSize)}
+                          </span>
+                        )}
+                      </div>
+                      <Download className="w-4 h-4 text-wa-textSecondary shrink-0 ml-1" />
+                    </a>
+                  );
+                })()}
+
+                {/* Rich Media: Location */}
+                {msg.mediaType === 'location' && msg.locationData && (
+                  <div className="rounded-xl overflow-hidden bg-black/25 border border-white/10 p-3 my-1 space-y-2">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 shrink-0">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-white block text-xs truncate">
+                          {msg.locationData.name || 'Shared Location'}
+                        </span>
+                        <span className="text-[11px] text-wa-textSecondary block mt-0.5 truncate">
+                          {msg.locationData.address || `Lat: ${msg.locationData.latitude}, Lng: ${msg.locationData.longitude}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <a
+                      href={`https://www.google.com/maps?q=${msg.locationData.latitude},${msg.locationData.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block text-center py-1.5 bg-wa-surface hover:bg-wa-hover text-quantum-cyan rounded-lg font-semibold text-xs transition border border-wa-border"
+                    >
+                      Open in Google Maps &rarr;
+                    </a>
                   </div>
+                )}
+
+                {/* Rich Media: Contact Card */}
+                {msg.mediaType === 'contact' && msg.contactData && (
+                  <div className="rounded-xl overflow-hidden bg-black/25 border border-white/10 p-3 my-1 space-y-2.5">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={getResolvedAvatar(msg.contactData.avatarUrl, msg.contactData.email || msg.contactData.name, msg.contactData.name)}
+                        alt={msg.contactData.name}
+                        className="w-10 h-10 rounded-full object-cover bg-wa-surface border border-wa-border shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-white block text-xs truncate">
+                          {msg.contactData.name}
+                        </span>
+                        {msg.contactData.phone && (
+                          <span className="text-[11px] text-quantum-cyan flex items-center gap-1 font-mono mt-0.5 truncate">
+                            <Phone className="w-3 h-3 text-wa-green shrink-0" />
+                            {msg.contactData.phone}
+                          </span>
+                        )}
+                        {msg.contactData.email && (
+                          <span className="text-[10px] text-wa-textSecondary flex items-center gap-1 mt-0.5 truncate">
+                            <Mail className="w-3 h-3 shrink-0" />
+                            {msg.contactData.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {msg.contactData.phone && (
+                      <a
+                        href={`tel:${msg.contactData.phone}`}
+                        className="block text-center py-1.5 bg-wa-green/20 hover:bg-wa-green/30 border border-wa-green/40 text-wa-green font-semibold rounded-lg text-xs transition"
+                      >
+                        Call Contact
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Rich Media: Sticker */}
+                {msg.mediaType === 'sticker' && (
+                  <div className="py-2 text-center my-1">
+                    <div className="text-4xl drop-shadow-md">{msg.plaintextPreview?.split(' ')?.[0] || '✨'}</div>
+                    <div className="text-[11px] text-quantum-cyan font-semibold mt-1">
+                      {msg.plaintextPreview?.split(' ').slice(1).join(' ') || 'Quantum Sticker'}
+                    </div>
+                  </div>
+                )}
+
+                {/* Message Plaintext Body */}
+                {msg.mediaType !== 'sticker' && (
+                  <>
+                    {msg.isDeletedForEveryone ? (
+                      <span className="italic text-wa-textSecondary/80 text-xs flex items-center gap-1">
+                        <Ban className="w-3.5 h-3.5 text-wa-textSecondary/70" />
+                        <span>This message was deleted</span>
+                      </span>
+                    ) : (
+                      msg.plaintextPreview && (
+                        <div className="break-words leading-relaxed whitespace-pre-wrap">
+                          {msg.plaintextPreview}
+                        </div>
+                      )
+                    )}
+                  </>
                 )}
 
                 {/* Threat Warning Callout if Rejected */}
@@ -660,8 +1318,16 @@ export default function ChatWindow({
                   </div>
                 )}
 
-                {/* Message Footer: Timestamp + QDS Status Badge */}
+                {/* Footer: Timestamp, Edited badge, Star, Delivery Status */}
                 <div className="flex items-center justify-end space-x-1.5 mt-1 text-[11px] text-wa-textSecondary/90 font-medium">
+                  {msg.isEdited && (
+                    <span className="text-[10px] text-wa-textSecondary/75 italic" title={`Edited ${msg.editedAt ? new Date(msg.editedAt).toLocaleTimeString() : ''}`}>
+                      (edited)
+                    </span>
+                  )}
+                  {isStarred && (
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" title="Starred" />
+                  )}
                   <span>
                     {new Date(msg.createdAt || msg.sentAt).toLocaleTimeString([], {
                       hour: '2-digit',
@@ -671,6 +1337,37 @@ export default function ChatWindow({
                   {renderDeliveryIcon(msg)}
                 </div>
               </div>
+
+              {/* Emoji Reaction Counter Badges Beneath Bubble */}
+              {Object.keys(reactionCounts).length > 0 && (
+                <div
+                  className={`flex flex-wrap gap-1 mt-1 ${
+                    isSender ? 'justify-end pr-1' : 'justify-start pl-1'
+                  }`}
+                >
+                  {Object.entries(reactionCounts).map(([emoji, count]) => {
+                    const userReacted = (msg.reactions || []).some(
+                      (r) => r.emoji === emoji && String(r.userId?._id || r.userId) === myId
+                    );
+                    return (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => handleReact(msg._id, emoji)}
+                        className={`px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 border transition shadow-sm ${
+                          userReacted
+                            ? 'bg-quantum-cyan/20 border-quantum-cyan/50 text-white'
+                            : 'bg-wa-surface border-wa-border text-wa-textSecondary hover:text-white'
+                        }`}
+                        title={`${count} reactions. Click to toggle.`}
+                      >
+                        <span>{emoji}</span>
+                        {count > 1 && <span className="text-[10px] font-mono">{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
@@ -736,7 +1433,51 @@ export default function ChatWindow({
         </div>
       )}
 
-      {/* Blocked Contact Warning Bar or Input Bar */}
+      {/* Replying Banner Above Input */}
+      {replyingTo && (
+        <div className="px-4 py-2 bg-wa-panel border-t border-wa-border flex items-center justify-between animate-in slide-in-from-bottom-2">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-1 h-8 bg-wa-green rounded-full shrink-0" />
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-wa-green block leading-tight">
+                Replying to {replyingTo.senderName}
+              </span>
+              <span className="text-[11px] text-wa-textSecondary truncate block">
+                {replyingTo.textPreview}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="p-1 text-wa-textSecondary hover:text-white rounded-full transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Editing Message Banner Above Input */}
+      {editingMessage && (
+        <div className="px-4 py-2 bg-amber-950/60 border-t border-amber-500/50 flex items-center justify-between animate-in slide-in-from-bottom-2">
+          <div className="flex items-center space-x-2 text-xs text-amber-200 min-w-0">
+            <Edit3 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="font-semibold">Editing message</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingMessage(null);
+              setInputText('');
+            }}
+            className="text-xs text-amber-300 hover:text-white underline font-semibold"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Blocked Contact Warning Bar or Message Input Bar */}
       {isContactBlocked ? (
         <div className="h-16 px-4 sm:px-6 bg-red-950/40 border-t border-red-500/40 flex items-center justify-between shrink-0 animate-in fade-in">
           <div className="flex items-center gap-2 text-xs text-red-200 truncate pr-2">
@@ -752,9 +1493,17 @@ export default function ChatWindow({
             {blocking ? 'Updating...' : 'Unblock'}
           </button>
         </div>
+      ) : showVoiceRecorder ? (
+        /* In-Line Voice Recorder Bar */
+        <div className="p-2 bg-wa-surface border-t border-wa-border flex items-center shrink-0 z-20">
+          <VoiceRecorder
+            onSendVoice={handleSendVoice}
+            onCancel={() => setShowVoiceRecorder(false)}
+          />
+        </div>
       ) : (
-        /* Message Input Bar */
-        <div className="min-h-[52px] sm:min-h-[56px] py-1.5 sm:py-2 px-2 sm:px-4 bg-wa-surface flex items-center space-x-1.5 sm:space-x-3 border-t border-wa-border shrink-0 z-20">
+        /* Regular Message Input Bar */
+        <div className="min-h-[54px] sm:min-h-[58px] py-1.5 sm:py-2 px-2 sm:px-3 bg-wa-surface flex items-center space-x-1.5 sm:space-x-2 border-t border-wa-border shrink-0 z-20 relative">
           {/* Attack Demo Toggle */}
           <button
             type="button"
@@ -769,22 +1518,112 @@ export default function ChatWindow({
             <Zap className="w-5 h-5" />
           </button>
 
-          {/* Attachment Upload Button */}
+          {/* Emoji & Sticker Picker Toggle */}
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            title="Attach Image or Document"
-            className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition disabled:opacity-50 shrink-0"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            title="Emojis & Stickers"
+            className={`p-2 rounded-full transition shrink-0 ${
+              showEmojiPicker ? 'text-wa-green bg-wa-hover' : 'text-wa-textSecondary hover:text-white hover:bg-wa-hover'
+            }`}
           >
-            <Paperclip className="w-5 h-5" />
+            <Smile className="w-5 h-5" />
           </button>
+
+          {/* Attachment Paperclip Menu Trigger */}
+          <div className="relative" ref={attachMenuRef}>
+            <button
+              type="button"
+              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              disabled={uploading}
+              title="Attach media, location, contact, document"
+              className={`p-2 rounded-full transition shrink-0 ${
+                showAttachMenu ? 'text-quantum-cyan bg-wa-hover' : 'text-wa-textSecondary hover:text-white hover:bg-wa-hover'
+              }`}
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+
+            {/* Attachment Dropdown Popover */}
+            {showAttachMenu && (
+              <div className="absolute bottom-12 left-0 w-48 bg-wa-surface border border-wa-border rounded-2xl shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95">
+                {/* Photos & Videos */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    fileInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                >
+                  <div className="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                  <span>Photos & Videos</span>
+                </button>
+
+                {/* Documents */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    docInputRef.current?.click();
+                  }}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                >
+                  <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span>Document</span>
+                </button>
+
+                {/* Location */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    setShowLocationModal(true);
+                  }}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                >
+                  <div className="w-7 h-7 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <span>Location</span>
+                </button>
+
+                {/* Contact */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    setShowContactModal(true);
+                  }}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                >
+                  <div className="w-7 h-7 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <span>Contact Card</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Hidden File Inputs */}
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
             className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,video/*"
+          />
+          <input
+            type="file"
+            ref={docInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.txt,.zip,.csv,.xls,.xlsx"
           />
 
           {/* Text Input Form */}
@@ -797,23 +1636,129 @@ export default function ChatWindow({
               placeholder={
                 selectedAttack
                   ? `Simulating ${selectedAttack}...`
+                  : editingMessage
+                  ? 'Edit your message...'
                   : 'Type a message...'
               }
-              className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition min-w-0"
+              className="w-full bg-wa-panel border border-wa-border rounded-xl px-3.5 py-2 sm:py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition min-w-0"
             />
 
-            <button
-              type="submit"
-              disabled={!inputText.trim() || sending}
-              className="p-2 sm:p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
-            >
-              {sending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </button>
+            {/* If input has text or user is editing -> Show Send Button. Otherwise show Voice Note Mic Button */}
+            {inputText.trim() || editingMessage ? (
+              <button
+                type="submit"
+                disabled={!inputText.trim() || sending}
+                className="p-2 sm:p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition disabled:opacity-40 disabled:hover:bg-wa-green shrink-0"
+                title={editingMessage ? 'Save Edit' : 'Send message'}
+              >
+                {sending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : editingMessage ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowVoiceRecorder(true)}
+                className="p-2 sm:p-2.5 bg-wa-green hover:bg-wa-greenHover text-white rounded-full shadow-md transition shrink-0"
+                title="Record voice message"
+              >
+                <Mic className="w-5 h-5" />
+              </button>
+            )}
           </form>
+        </div>
+      )}
+
+      {/* Emoji & Sticker Picker Popover */}
+      {showEmojiPicker && (
+        <EmojiStickerPicker
+          onSelectEmoji={handleSelectEmoji}
+          onSelectSticker={handleSelectSticker}
+          onClose={() => setShowEmojiPicker(false)}
+        />
+      )}
+
+      {/* Location Share Modal */}
+      {showLocationModal && (
+        <LocationShareModal
+          onSendLocation={handleSendLocation}
+          onClose={() => setShowLocationModal(false)}
+        />
+      )}
+
+      {/* Contact Share Modal */}
+      {showContactModal && (
+        <ContactShareModal
+          chats={chats}
+          currentUser={currentUser}
+          onSendContact={handleSendContact}
+          onClose={() => setShowContactModal(false)}
+        />
+      )}
+
+      {/* Forward Message Modal */}
+      {messageToForward && (
+        <ForwardModal
+          message={messageToForward}
+          chats={chats}
+          currentUser={currentUser}
+          onForwarded={() => showToast('Message forwarded')}
+          onClose={() => setMessageToForward(null)}
+        />
+      )}
+
+      {/* Lightbox Image Preview Modal */}
+      {lightboxImage && (
+        <LightboxModal
+          url={lightboxImage.url}
+          filename={lightboxImage.filename}
+          onClose={() => setLightboxImage(null)}
+        />
+      )}
+
+      {/* Delete Message Confirmation Modal */}
+      {deleteModalData && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-wa-surface border border-wa-border max-w-xs w-full rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="w-10 h-10 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div className="text-center space-y-1">
+              <h4 className="font-bold text-white text-sm">Delete message?</h4>
+              <p className="text-xs text-wa-textSecondary">
+                Choose whether to delete this message for everyone or only for yourself.
+              </p>
+            </div>
+            <div className="space-y-2 pt-1">
+              {deleteModalData.isSender && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMessage(true)}
+                  className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow"
+                >
+                  Delete for everyone
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleDeleteMessage(false)}
+                className="w-full py-2 bg-wa-panel hover:bg-wa-hover text-white rounded-xl text-xs font-semibold border border-wa-border transition"
+              >
+                Delete for me
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteModalData(null)}
+                className="w-full py-2 text-wa-textSecondary hover:text-white rounded-xl text-xs transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1028,4 +1973,3 @@ export default function ChatWindow({
     </div>
   );
 }
-

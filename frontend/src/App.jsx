@@ -10,6 +10,8 @@ import VerificationDetailModal from './components/VerificationDetailModal';
 import UserProfileModal from './components/UserProfileModal';
 import ChatProfileModal from './components/ChatProfileModal';
 import ChatBackupModal from './components/ChatBackupModal';
+import StorageManagerModal from './components/StorageManagerModal';
+import StarredMessagesModal from './components/StarredMessagesModal';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -33,6 +35,8 @@ export default function App() {
   const [showChatProfileModal, setShowChatProfileModal] = useState(false);
   const [showChatBackupModal, setShowChatBackupModal] = useState(false);
   const [chatForBackup, setChatForBackup] = useState(null);
+  const [showStorageManagerModal, setShowStorageManagerModal] = useState(false);
+  const [showStarredMessagesModal, setShowStarredMessagesModal] = useState(false);
 
   // Fetch chats on mount / auth change
   const fetchChats = async () => {
@@ -187,8 +191,51 @@ export default function App() {
       });
     };
 
+    // Message reaction handler
+    const handleMessageReaction = (data) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === data.messageId ? { ...m, reactions: data.reactions } : m
+        )
+      );
+    };
+
+    // Message edited handler
+    const handleMessageEdited = (data) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === data.messageId
+            ? {
+                ...m,
+                plaintextPreview: data.plaintextPreview,
+                isEdited: true,
+                editedAt: data.editedAt
+              }
+            : m
+        )
+      );
+    };
+
+    // Message deleted handler
+    const handleMessageDeleted = (data) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === data.messageId
+            ? {
+                ...m,
+                isDeletedForEveryone: true,
+                plaintextPreview: 'This message was deleted'
+              }
+            : m
+        )
+      );
+    };
+
     socket.on('message:new', handleNewMessage);
     socket.on('message:status', handleMessageStatus);
+    socket.on('message:reaction', handleMessageReaction);
+    socket.on('message:edited', handleMessageEdited);
+    socket.on('message:deleted', handleMessageDeleted);
     socket.on('presence:update', handlePresenceUpdate);
     socket.on('typing:status', handleTypingStatus);
     socket.on('security:alert', handleSecurityAlert);
@@ -202,6 +249,9 @@ export default function App() {
       }
       socket.off('message:new', handleNewMessage);
       socket.off('message:status', handleMessageStatus);
+      socket.off('message:reaction', handleMessageReaction);
+      socket.off('message:edited', handleMessageEdited);
+      socket.off('message:deleted', handleMessageDeleted);
       socket.off('presence:update', handlePresenceUpdate);
       socket.off('typing:status', handleTypingStatus);
       socket.off('security:alert', handleSecurityAlert);
@@ -242,17 +292,13 @@ export default function App() {
   };
 
   // Send message action
-  const handleSendMessage = async ({ message, mediaUrl, mediaType, mediaFilename, simulateAttack }) => {
+  const handleSendMessage = async (payload) => {
     if (!activeChat) return;
 
     try {
       await api.post('/messages', {
         chatId: activeChat._id,
-        message,
-        mediaUrl,
-        mediaType,
-        mediaFilename,
-        simulateAttack
+        ...payload
       });
     } catch (err) {
       alert('Failed to send quantum message: ' + (err.response?.data?.error || err.message));
@@ -317,6 +363,9 @@ export default function App() {
           onOpenNewChatModal={() => setShowNewChatModal(true)}
           onOpenSecurityDashboard={() => setShowSecurityDashboard(true)}
           onOpenUserProfile={() => setShowUserProfileModal(true)}
+          onOpenStorageManager={() => setShowStorageManagerModal(true)}
+          onOpenStarredMessages={() => setShowStarredMessagesModal(true)}
+          onChatsUpdated={fetchChats}
           onLogout={handleLogout}
         />
       </div>
@@ -339,6 +388,8 @@ export default function App() {
             onClearChat={handleClearMessages}
             onOpenChatProfile={() => setShowChatProfileModal(true)}
             onOpenUserProfile={() => setShowUserProfileModal(true)}
+            onOpenStorageManager={() => setShowStorageManagerModal(true)}
+            onOpenStarredMessages={() => setShowStarredMessagesModal(true)}
             onOpenBackup={(chat) => {
               setChatForBackup(chat || activeChat);
               setShowChatBackupModal(true);
@@ -438,6 +489,36 @@ export default function App() {
           onClose={() => {
             setShowChatBackupModal(false);
             setChatForBackup(null);
+          }}
+          onRestoreSuccess={(chatId) => {
+            fetchChats();
+            if (activeChat?._id === chatId) {
+              api.get(`/chats/${chatId}/messages`).then((r) => setMessages(r.data.messages || []));
+            }
+          }}
+        />
+      )}
+
+      {/* Storage Manager Modal */}
+      {showStorageManagerModal && (
+        <StorageManagerModal
+          onClose={() => setShowStorageManagerModal(false)}
+          onStorageCleared={(chatId) => {
+            if (activeChat?._id === chatId) {
+              api.get(`/chats/${chatId}/messages`).then((r) => setMessages(r.data.messages || []));
+            }
+          }}
+        />
+      )}
+
+      {/* Starred Messages Modal */}
+      {showStarredMessagesModal && (
+        <StarredMessagesModal
+          onClose={() => setShowStarredMessagesModal(false)}
+          onSelectChat={(chat) => {
+            if (chat) {
+              setActiveChat(chat);
+            }
           }}
         />
       )}

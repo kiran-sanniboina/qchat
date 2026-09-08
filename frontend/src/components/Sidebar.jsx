@@ -13,8 +13,17 @@ import {
   Sparkles,
   User,
   MessageSquare,
-  Settings
+  Settings,
+  Pin,
+  PinOff,
+  BellOff,
+  Bell,
+  HardDrive,
+  Star,
+  Trash2,
+  Folder
 } from 'lucide-react';
+import api from '../api';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
 
 export default function Sidebar({
@@ -25,17 +34,63 @@ export default function Sidebar({
   onOpenNewChatModal,
   onOpenSecurityDashboard,
   onOpenUserProfile,
+  onOpenStorageManager,
+  onOpenStarredMessages,
+  onChatsUpdated,
   onLogout
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeFolder, setActiveFolder] = useState('all'); // 'all' | 'unread' | 'groups' | 'pinned'
+  const [chatMenuOpenId, setChatMenuOpenId] = useState(null);
+  const [muteModalChat, setMuteModalChat] = useState(null);
+
+  const myId = String(currentUser?.id || currentUser?._id || '');
+
+  const handleTogglePin = async (e, chatId) => {
+    e.stopPropagation();
+    setChatMenuOpenId(null);
+    try {
+      await api.put(`/chats/${chatId}/pin`);
+      if (onChatsUpdated) onChatsUpdated();
+    } catch (err) {
+      alert('Failed to update pin: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleToggleMute = async (chatId, duration) => {
+    try {
+      await api.put(`/chats/${chatId}/mute`, { duration });
+      setMuteModalChat(null);
+      if (onChatsUpdated) onChatsUpdated();
+    } catch (err) {
+      alert('Failed to update mute: ' + (err.response?.data?.error || err.message));
+    }
+  };
 
   const filteredChats = chats.filter((chat) => {
-    if (!searchQuery.trim()) return true;
-    const name = chat.isGroup
-      ? chat.name
-      : chat.participants?.find((p) => p._id !== currentUser.id)?.name || '';
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
+    const otherParticipant = chat.isGroup
+      ? null
+      : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
+    const name = chat.isGroup ? chat.name : (otherParticipant?.name || 'User');
+
+    if (searchQuery.trim() && !name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+
+    if (activeFolder === 'groups') {
+      return chat.isGroup;
+    }
+    if (activeFolder === 'unread') {
+      const lastMsg = chat.lastMessage;
+      const isMyMsg = lastMsg && String(lastMsg.senderId?._id || lastMsg.senderId) === myId;
+      return lastMsg && !isMyMsg && lastMsg.deliveryState !== 'read';
+    }
+    if (activeFolder === 'pinned') {
+      return chat.pinnedBy && chat.pinnedBy.some((id) => String(id?._id || id) === myId);
+    }
+
+    return true;
   });
 
   const formatTimestamp = (dateString) => {
@@ -124,6 +179,22 @@ export default function Sidebar({
               >
                 <Users className="w-4 h-4" /> New Group Chat
               </button>
+              {onOpenStorageManager && (
+                <button
+                  onClick={() => { setShowDropdown(false); onOpenStorageManager(); }}
+                  className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-quantum-cyan"
+                >
+                  <HardDrive className="w-4 h-4 text-quantum-cyan" /> Storage Manager
+                </button>
+              )}
+              {onOpenStarredMessages && (
+                <button
+                  onClick={() => { setShowDropdown(false); onOpenStarredMessages(); }}
+                  className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-amber-400"
+                >
+                  <Star className="w-4 h-4 fill-amber-400/40" /> Starred Messages
+                </button>
+              )}
               <button
                 onClick={() => { setShowDropdown(false); onOpenSecurityDashboard(); }}
                 className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-quantum-cyan"
@@ -182,11 +253,44 @@ export default function Sidebar({
         </div>
       </div>
 
+      {/* Chat Folders / Filter Tabs */}
+      <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-wa-panel border-b border-wa-border overflow-x-auto no-scrollbar shrink-0">
+        {[
+          { id: 'all', label: 'All', count: chats.length },
+          { id: 'unread', label: 'Unread', count: chats.filter(c => c.lastMessage && String(c.lastMessage.senderId?._id || c.lastMessage.senderId) !== myId && c.lastMessage.deliveryState !== 'read').length },
+          { id: 'pinned', label: 'Pinned', count: chats.filter(c => c.pinnedBy && c.pinnedBy.some(id => String(id?._id || id) === myId)).length },
+          { id: 'groups', label: 'Groups', count: chats.filter(c => c.isGroup).length }
+        ].map((tab) => {
+          const isActive = activeFolder === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveFolder(tab.id)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-wa-green text-black shadow-sm'
+                  : 'bg-wa-surface text-wa-textSecondary hover:text-white hover:bg-wa-hover border border-wa-border'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  isActive ? 'bg-black/20 text-black' : 'bg-wa-panel text-quantum-cyan'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto divide-y divide-wa-border/50">
         {filteredChats.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center text-wa-textSecondary h-48">
-            <p className="text-sm mb-2">No chats found.</p>
+            <p className="text-sm mb-2">No chats found in this folder.</p>
             <button
               onClick={onOpenNewChatModal}
               className="text-xs text-wa-green hover:underline font-semibold"
@@ -197,7 +301,6 @@ export default function Sidebar({
         ) : (
           filteredChats.map((chat) => {
             const isSelected = activeChat?._id === chat._id;
-            const myId = String(currentUser?.id || currentUser?._id || '');
             const otherParticipant = chat.isGroup
               ? null
               : chat.participants?.find((p) => String(p?._id || p?.id || p) !== myId);
@@ -211,11 +314,16 @@ export default function Sidebar({
             const isLastMsgRejected = lastMsg?.deliveryState === 'rejected';
             const isLastMsgVerified = lastMsg?.deliveryState === 'verified';
 
+            const isPinned = chat.pinnedBy && chat.pinnedBy.some((id) => String(id?._id || id) === myId);
+            const userMute = chat.mutedBy && chat.mutedBy.find((m) => String(m.userId?._id || m.userId) === myId);
+            const isMuted = Boolean(userMute && (!userMute.until || new Date(userMute.until) > new Date()));
+            const isMenuOpen = chatMenuOpenId === chat._id;
+
             return (
               <div
                 key={chat._id}
                 onClick={() => onSelectChat(chat)}
-                className={`flex items-center px-4 py-3 cursor-pointer transition relative ${
+                className={`flex items-center px-4 py-3 cursor-pointer transition relative group ${
                   isSelected ? 'bg-wa-active' : 'hover:bg-wa-hover'
                 }`}
               >
@@ -235,13 +343,83 @@ export default function Sidebar({
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-semibold text-white truncate pr-2">
-                      {displayName}
-                    </h3>
-                    <span className="text-[11px] text-wa-textSecondary shrink-0 font-medium">
-                      {formatTimestamp(lastMsg?.createdAt || chat.updatedAt)}
-                    </span>
+                    <div className="flex items-center space-x-1.5 min-w-0 pr-2">
+                      <h3 className="text-sm font-semibold text-white truncate">
+                        {displayName}
+                      </h3>
+                      {isPinned && (
+                        <Pin className="w-3.5 h-3.5 text-wa-green fill-wa-green shrink-0" title="Pinned chat" />
+                      )}
+                      {isMuted && (
+                        <BellOff className="w-3.5 h-3.5 text-wa-textSecondary shrink-0" title="Muted chat" />
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <span className="text-[11px] text-wa-textSecondary font-medium">
+                        {formatTimestamp(lastMsg?.createdAt || chat.updatedAt)}
+                      </span>
+
+                      {/* Chat Options Trigger */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setChatMenuOpenId(isMenuOpen ? null : chat._id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-wa-textSecondary hover:text-white rounded-full transition"
+                        title="Chat options"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Dropdown Menu on Chat Item */}
+                  {isMenuOpen && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-4 top-10 w-40 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-white animate-in fade-in zoom-in-95"
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => handleTogglePin(e, chat._id)}
+                        className="w-full px-3.5 py-2 text-left hover:bg-wa-hover flex items-center gap-2"
+                      >
+                        {isPinned ? (
+                          <>
+                            <PinOff className="w-3.5 h-3.5 text-wa-textSecondary" />
+                            <span>Unpin Chat</span>
+                          </>
+                        ) : (
+                          <>
+                            <Pin className="w-3.5 h-3.5 text-wa-green" />
+                            <span>Pin Chat</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setChatMenuOpenId(null);
+                          setMuteModalChat(chat);
+                        }}
+                        className="w-full px-3.5 py-2 text-left hover:bg-wa-hover flex items-center gap-2"
+                      >
+                        {isMuted ? (
+                          <>
+                            <Bell className="w-3.5 h-3.5 text-wa-green" />
+                            <span>Unmute Chat</span>
+                          </>
+                        ) : (
+                          <>
+                            <BellOff className="w-3.5 h-3.5 text-wa-textSecondary" />
+                            <span>Mute Chat...</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1 text-xs text-wa-textSecondary truncate">
@@ -273,7 +451,7 @@ export default function Sidebar({
                     {/* Verification badge pill */}
                     {isLastMsgVerified && (
                       <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-wa-green/20 text-wa-green border border-wa-green/30 font-medium shrink-0">
-                        QDS Verified
+                        QDS
                       </span>
                     )}
                     {isLastMsgRejected && (
@@ -362,6 +540,46 @@ export default function Sidebar({
           <span className="text-[10px] font-medium mt-0.5">Settings</span>
         </button>
       </div>
+
+      {/* Mute Duration Dialog Modal */}
+      {muteModalChat && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-wa-surface border border-wa-border max-w-xs w-full rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center space-x-2 text-white font-bold text-sm">
+              <BellOff className="w-5 h-5 text-quantum-cyan" />
+              <span>Mute notifications for {muteModalChat.name || 'this chat'}?</span>
+            </div>
+            <p className="text-xs text-wa-textSecondary">
+              Other participants will not see that you muted this chat.
+            </p>
+            <div className="space-y-1.5 pt-1">
+              {[
+                { label: '8 Hours', value: '8h' },
+                { label: '1 Week', value: '1w' },
+                { label: 'Always', value: 'forever' }
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleToggleMute(muteModalChat._id, opt.value)}
+                  className="w-full text-left px-3 py-2 rounded-lg bg-wa-panel hover:bg-wa-hover text-white text-xs font-medium border border-wa-border transition"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setMuteModalChat(null)}
+                className="px-3 py-1.5 bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-lg text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
