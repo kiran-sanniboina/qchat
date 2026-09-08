@@ -182,6 +182,8 @@ exports.sendMessage = async (req, res) => {
 
     // --- 4. Determine Delivery State & Threat Logging ---
     const isRejected = (verification.decision === 'REJECT');
+    const deliveryState = isRejected ? 'rejected' : 'verified';
+
     // Determine valid replyTo
     let validReplyTo = {
       messageId: null,
