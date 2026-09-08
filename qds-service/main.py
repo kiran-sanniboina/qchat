@@ -265,12 +265,22 @@ def simulate_teleport_steps(payload: TeleportStepRequest):
         perturb_type=payload.perturbType
     )
 
+# In-memory cache for benchmark matrix (5-minute TTL)
+_cached_benchmark: Optional[Dict[str, Any]] = None
+_cached_benchmark_time: float = 0.0
+
 @app.get("/qds/benchmark/matrix")
-def benchmark_experiment_matrix():
+def benchmark_experiment_matrix(refresh: bool = False):
     """
     Milestone 8: Runs the benchmark experiment matrix across varying noise and attack scenarios.
     Returns detection rates, false positive rates, and CHSH curves for reporting.
+    Uses in-memory caching and an optimized simulator for sub-second responses.
     """
+    global _cached_benchmark, _cached_benchmark_time
+    now = time.time()
+    if not refresh and _cached_benchmark is not None and (now - _cached_benchmark_time < 300):
+        return _cached_benchmark
+
     noise_levels = [0.0, 0.05, 0.10, 0.20]
     attack_types = [
         ThreatType.FORGERY,
@@ -281,17 +291,18 @@ def benchmark_experiment_matrix():
         ThreatType.TAMPERING
     ]
 
-    matrix_results = []
-    e91 = DynamicE91(shots_per_setting=400)
+    # Fast benchmark simulator (shots_per_setting=100) for sub-second cloud execution
+    e91_bench = DynamicE91(shots_per_setting=100)
+    sim_bench = AttackSimulator(qds_core, e91_bench)
 
     # 1. Baseline false positive test
-    baseline_evals = [e91.evaluate_channel(noise_rate=0.0) for _ in range(5)]
+    baseline_evals = [e91_bench.evaluate_channel(noise_rate=0.0) for _ in range(2)]
     false_positives = sum(1 for e in baseline_evals if e["channelStatus"] == "FAIL")
 
     # 2. Noise response curve
     noise_curve = []
     for noise in noise_levels:
-        res = e91.evaluate_channel(noise_rate=noise, intercept_prob=0.0)
+        res = e91_bench.evaluate_channel(noise_rate=noise, intercept_prob=0.0)
         noise_curve.append({
             "noiseRate": noise,
             "chshS": res["chshS"],
@@ -302,14 +313,14 @@ def benchmark_experiment_matrix():
     # 3. Attack detection rate
     attack_detection_stats = {}
     for att in attack_types:
-        sim = attack_simulator.run_simulation(att)
+        sim = sim_bench.run_simulation(att)
         attack_detection_stats[att] = {
             "detected": sim["threatDetected"],
             "classifiedAs": sim["detectedThreatType"],
             "severity": sim["verificationResult"]["severity"]
         }
 
-    return {
+    result = {
         "benchmarkTitle": "QDS Security Matrix & Channel Sensitivity Report",
         "falsePositiveRate": round(false_positives / len(baseline_evals), 4),
         "noiseSensitivityCurve": noise_curve,
@@ -319,4 +330,9 @@ def benchmark_experiment_matrix():
         "classicalBound": 2.0,
         "recommendedThreshold": 0.05
     }
+
+    _cached_benchmark = result
+    _cached_benchmark_time = now
+    return result
+
 

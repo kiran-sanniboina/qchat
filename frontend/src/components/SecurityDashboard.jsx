@@ -31,6 +31,8 @@ export default function SecurityDashboard({
   const [statusData, setStatusData] = useState(null);
   const [threatLogs, setThreatLogs] = useState([]);
   const [benchmarkMatrix, setBenchmarkMatrix] = useState(null);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(false);
+  const [benchmarkError, setBenchmarkError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [evaluatingE91, setEvaluatingE91] = useState(false);
   const [noiseRate, setNoiseRate] = useState(0.0);
@@ -113,14 +115,16 @@ export default function SecurityDashboard({
 
   // Fetch Milestone 8 benchmark matrix
   const handleLoadBenchmark = async () => {
-    setLoading(true);
+    setBenchmarkLoading(true);
+    setBenchmarkError(null);
     try {
       const res = await api.get('/security/benchmark/matrix');
       setBenchmarkMatrix(res.data);
     } catch (err) {
-      alert('Error fetching benchmark: ' + err.message);
+      console.error('Error fetching benchmark:', err);
+      setBenchmarkError(err.response?.data?.error || err.message);
     } finally {
-      setLoading(false);
+      setBenchmarkLoading(false);
     }
   };
 
@@ -571,14 +575,32 @@ export default function SecurityDashboard({
               <h3 className="text-sm font-bold text-white">Quantum Security Benchmark & Noise Sensitivity</h3>
               <button
                 onClick={handleLoadBenchmark}
-                disabled={loading}
-                className="text-xs text-wa-green hover:underline flex items-center gap-1 font-semibold"
+                disabled={benchmarkLoading}
+                className="text-xs text-wa-green hover:underline flex items-center gap-1 font-semibold disabled:opacity-50"
               >
-                <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Run Matrix
+                <RefreshCw className={`w-3 h-3 ${benchmarkLoading ? 'animate-spin' : ''}`} /> Run Matrix
               </button>
             </div>
 
-            {benchmarkMatrix ? (
+            {benchmarkError && (
+              <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-xs text-red-200 flex items-center justify-between">
+                <span>{benchmarkError}</span>
+                <button
+                  type="button"
+                  onClick={handleLoadBenchmark}
+                  className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded text-xs font-semibold"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {benchmarkLoading && !benchmarkMatrix ? (
+              <div className="text-center py-10 text-wa-textSecondary flex flex-col items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-quantum-cyan" />
+                <span className="text-xs">Running benchmark experiment matrix across quantum circuits...</span>
+              </div>
+            ) : benchmarkMatrix ? (
               <div className="space-y-4">
                 {/* Summary KPIs */}
                 <div className="grid grid-cols-2 gap-3">
@@ -641,8 +663,14 @@ export default function SecurityDashboard({
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 text-wa-textSecondary">
-                Loading benchmark experiment matrix...
+              <div className="text-center py-8 text-wa-textSecondary">
+                <button
+                  type="button"
+                  onClick={handleLoadBenchmark}
+                  className="px-4 py-2 bg-wa-green text-white font-semibold rounded-lg hover:bg-wa-greenHover transition"
+                >
+                  Run Benchmark Matrix
+                </button>
               </div>
             )}
           </div>
