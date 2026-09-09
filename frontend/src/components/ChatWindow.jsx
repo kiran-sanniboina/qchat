@@ -954,13 +954,11 @@ export default function ChatWindow({
       {/* Messages Stream with WhatsApp Doodle Pattern */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto wa-chat-bg p-4 space-y-3 min-h-0">
         {/* End-to-End Quantum Security Notice */}
-        <div className="max-w-md mx-auto bg-wa-panel/90 border border-wa-border rounded-lg p-2.5 text-center shadow-md my-2">
-          <div className="flex items-center justify-center gap-1.5 text-amber-300 text-xs font-semibold mb-1">
-            <Lock className="w-3.5 h-3.5" /> Quantum End-to-End Encryption
+        <div className="flex justify-center my-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-wa-panel/90 border border-wa-border rounded-lg text-amber-300 text-xs font-semibold shadow-sm">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Quantum End-to-End Encryption</span>
           </div>
-          <p className="text-[11px] text-gray-300 leading-relaxed">
-            Messages are encrypted with AES-256-GCM and bound to Pauli eigenstates (|0⟩, |1⟩, |+⟩, |−⟩) via quantum teleportation. E91 channel actively monitored (S ≈ 2.82).
-          </p>
         </div>
 
         {/* Messages List */}
