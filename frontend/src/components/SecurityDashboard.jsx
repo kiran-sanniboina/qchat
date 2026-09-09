@@ -105,8 +105,8 @@ export default function SecurityDashboard({
       setSimFeedback(sim);
       fetchSecurityData();
     } catch (err) {
-      alert('Simulation error: ' + err.message);
-      const errMsg = err.response?.data?.error || err.message;
+      console.warn('Simulation error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Failed to complete attack simulation.';
       setSimError(errMsg);
     } finally {
       setSimulatingAttack(null);
@@ -533,12 +533,22 @@ export default function SecurityDashboard({
 
             {/* Simulation Error Alert */}
             {simError && (
-              <div className="p-3.5 bg-red-950/60 border border-red-500/60 rounded-xl text-xs text-red-200 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-bold text-red-300">Simulation Error</strong>
-                  <p className="mt-0.5 text-[11px] text-red-200/90">{simError}</p>
+              <div className="p-3.5 bg-red-950/60 border border-red-500/60 rounded-xl text-xs text-red-200 flex items-start justify-between gap-2.5 animate-in fade-in">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold text-red-300">Simulation Status</strong>
+                    <p className="mt-0.5 text-[11px] text-red-200/90 leading-relaxed">{simError}</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setSimError(null)}
+                  className="text-red-400 hover:text-white text-base leading-none px-1 py-0.5"
+                  title="Dismiss"
+                >
+                  &times;
+                </button>
               </div>
             )}
 

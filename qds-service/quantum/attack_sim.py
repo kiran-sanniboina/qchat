@@ -13,6 +13,8 @@ class AttackSimulator:
     def __init__(self, qds_core: QDSCore, e91: DynamicE91):
         self.qds = qds_core
         self.e91 = e91
+        # Fast evaluator with 100 shots for ultra-low latency interactive simulations
+        self.fast_e91 = DynamicE91(shots_per_setting=100)
 
     def run_simulation(
         self,
@@ -33,18 +35,18 @@ class AttackSimulator:
         verifier_id = "bob_sim"
         key_ab = "sim_shared_secret_quantum_key_2026"
 
-        # Baseline legitimate sign
+        # Baseline legitimate sign (16 qubits for high-speed simulation)
         signed = self.qds.sign_message(
             message=sample_message,
             session_id=session_id,
             nonce=nonce,
             recipient_id=verifier_id,
             key_material=key_ab,
-            num_qubits=32
+            num_qubits=16
         )
 
-        # Baseline healthy E91 channel
-        channel_eval = self.e91.evaluate_channel()
+        # Baseline healthy E91 channel via fast evaluator
+        channel_eval = self.fast_e91.evaluate_channel()
 
         # Run verification with simulated attack
         verification = self.qds.verify_message(

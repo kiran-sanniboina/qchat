@@ -116,7 +116,7 @@ class QuantumTeleporter:
         qc.measure(1, 1)
 
         # We simulate the measurement outcome to determine Alice's classical bits
-        sim = AerSimulator()
+        sim = self.simulator
         result = sim.run(qc, shots=1, memory=True).result()
         # memory format: 'c1 c0' (qiskit bit order)
         memory_str = result.get_memory()[0]
