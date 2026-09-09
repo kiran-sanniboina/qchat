@@ -83,7 +83,28 @@ export default function SecurityDashboard({
         e91Status: res.data.e91Status
       }));
     } catch (err) {
-      alert('Error running E91 test: ' + err.message);
+      console.warn('Error running E91 test:', err);
+    } finally {
+      setEvaluatingE91(false);
+    }
+  };
+
+  // Restore healthy quantum channel (reset noise to 0)
+  const handleResetChannel = async () => {
+    setNoiseRate(0.0);
+    setInterceptProb(0.0);
+    setEvaluatingE91(true);
+    try {
+      const res = await api.post(`/security/${chatId}/refresh-e91`, {
+        noiseRate: 0.0,
+        interceptProb: 0.0
+      });
+      setStatusData((prev) => ({
+        ...prev,
+        e91Status: res.data.e91Status
+      }));
+    } catch (err) {
+      console.warn('Error resetting channel:', err);
     } finally {
       setEvaluatingE91(false);
     }
@@ -284,14 +305,25 @@ export default function SecurityDashboard({
                   </div>
                 </div>
 
-                <button
-                  onClick={handleRefreshE91}
-                  disabled={evaluatingE91}
-                  className="w-full mt-2 py-2 bg-wa-surface hover:bg-wa-hover text-quantum-cyan border border-quantum-cyan/30 rounded text-xs font-semibold transition flex items-center justify-center gap-2"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${evaluatingE91 ? 'animate-spin' : ''}`} />
-                  {evaluatingE91 ? 'Executing Bell Measurement Circuit...' : 'Run Live Dynamic E91 Test'}
-                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={handleRefreshE91}
+                    disabled={evaluatingE91}
+                    className="flex-1 py-2 bg-wa-surface hover:bg-wa-hover text-quantum-cyan border border-quantum-cyan/30 rounded text-xs font-semibold transition flex items-center justify-center gap-1.5"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${evaluatingE91 ? 'animate-spin' : ''}`} />
+                    {evaluatingE91 ? 'Testing...' : 'Test Channel Noise'}
+                  </button>
+                  <button
+                    onClick={handleResetChannel}
+                    disabled={evaluatingE91}
+                    className="px-3 py-2 bg-wa-green/10 hover:bg-wa-green/20 text-wa-green border border-wa-green/30 rounded text-xs font-semibold transition flex items-center justify-center gap-1"
+                    title="Reset noise to 0 and restore Bell state to S = 2.828"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Reset Channel
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -17,6 +17,8 @@ if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('http
 }
 const QDS_URL = rawQdsUrl.replace(/\/+$/, '');
 
+const roundTo = (val, dec = 4) => Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
+
 // Get current security status & summary for a chat
 exports.getChatSecurityStatus = async (req, res) => {
   try {
@@ -79,15 +81,10 @@ exports.refreshE91 = async (req, res) => {
     }
 
     let e91Result;
-    try {
-      const qdsRes = await axios.post(`${QDS_URL}/qds/e91/evaluate`, {
-        noiseRate: noiseRate || 0.0,
-        interceptProb: interceptProb || 0.0,
-        shots: 600
-      }, { timeout: 65000 });
-      e91Result = qdsRes.data;
-    } catch (e) {
-      console.warn('Fallback local E91 evaluate:', e.message);
+    const isBaseline = (!noiseRate || parseFloat(noiseRate) === 0) && (!interceptProb || parseFloat(interceptProb) === 0);
+
+    if (isBaseline) {
+      // Instantly restore pristine Bell state baseline (Tsirelson bound)
       e91Result = {
         chshS: 2.8284,
         absS: 2.8284,
@@ -96,6 +93,30 @@ exports.refreshE91 = async (req, res) => {
         channelStatus: 'PASS',
         qberEstimate: 0.0
       };
+    } else {
+      try {
+        const qdsRes = await axios.post(`${QDS_URL}/qds/e91/evaluate`, {
+          noiseRate: noiseRate || 0.0,
+          interceptProb: interceptProb || 0.0,
+          shots: 100
+        }, { timeout: 4500 });
+        e91Result = qdsRes.data;
+      } catch (e) {
+        console.warn('Fallback local E91 evaluate:', e.message);
+        // Realistic degradation computation based on noise parameters
+        const nRate = parseFloat(noiseRate) || 0.0;
+        const iProb = parseFloat(interceptProb) || 0.0;
+        const degradedS = Math.max(0.4, 2.8284 * (1.0 - iProb * 0.7) * (1.0 - nRate * 0.8));
+        const estimatedQber = Math.min(0.5, iProb * 0.25 + nRate * 0.35);
+        e91Result = {
+          chshS: roundTo(degradedS, 4),
+          absS: roundTo(degradedS, 4),
+          theoreticalMax: 2.8284,
+          classicalBound: 2.0,
+          channelStatus: (degradedS >= 2.4 && estimatedQber <= 0.08) ? 'PASS' : ((degradedS >= 2.0 && estimatedQber <= 0.15) ? 'SUSPICIOUS' : 'FAIL'),
+          qberEstimate: roundTo(estimatedQber, 4)
+        };
+      }
     }
 
     // Update chat

@@ -181,23 +181,37 @@ class QDSCore:
 
         # Check for attack simulation flags
         is_signature_perturbed = False
+
+        # If simulating a non-channel attack, isolate channel parameters to healthy baseline
+        # so previous channel noise or degradation does not mask the specific attack under test
+        if simulate_attack in [
+            ThreatType.UNAUTHORIZED_VERIFICATION,
+            ThreatType.REPLAY,
+            ThreatType.IMPERSONATION,
+            ThreatType.FORGERY,
+            ThreatType.TAMPERING
+        ]:
+            e91_status = "PASS"
+            chsh_s = 2.8284
+            qber = 0.0
+
         if simulate_attack == ThreatType.UNAUTHORIZED_VERIFICATION:
             is_verifier_authorized = False
-        if simulate_attack == ThreatType.REPLAY:
+        elif simulate_attack == ThreatType.REPLAY:
             is_nonce_valid = False
-        if simulate_attack == ThreatType.IMPERSONATION:
+        elif simulate_attack == ThreatType.IMPERSONATION:
             is_signer_valid = False
-        if simulate_attack == ThreatType.CHANNEL_MANIPULATION:
+        elif simulate_attack == ThreatType.CHANNEL_MANIPULATION:
             e91_status = "FAIL"
             chsh_s = 1.42
             qber = 0.42
             is_signature_perturbed = True  # Active channel manipulation degrades signature states
-        if simulate_attack == ThreatType.PASSIVE_EAVESDROP:
+        elif simulate_attack == ThreatType.PASSIVE_EAVESDROP:
             e91_status = "FAIL"
             chsh_s = 1.85
             qber = 0.28
             # In passive eavesdropping, Eve listened on E91, but current message signature was not actively corrupted
-        if simulate_attack == ThreatType.FORGERY:
+        elif simulate_attack == ThreatType.FORGERY:
             is_signature_perturbed = True
 
         # 1. Classical Decryption

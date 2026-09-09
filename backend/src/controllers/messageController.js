@@ -144,6 +144,13 @@ exports.sendMessage = async (req, res) => {
     }
 
     // --- 3. Call Python QDS Core to Verify (Simulating Recipient Path) ---
+    // When simulating a specific non-channel attack, isolate channel parameters to healthy baseline
+    // so previous channel noise or degradation in the chat does not mask the specific attack under test
+    const isChannelAttack = (simulateAttack === 'CHANNEL_MANIPULATION' || simulateAttack === 'PASSIVE_EAVESDROP');
+    const effectiveE91Status = isChannelAttack ? 'FAIL' : (simulateAttack ? 'PASS' : (chat.e91Status?.channelStatus || 'PASS'));
+    const effectiveChshS = isChannelAttack ? (simulateAttack === 'PASSIVE_EAVESDROP' ? 1.85 : 1.42) : (simulateAttack ? 2.8284 : (chat.e91Status?.chshS || 2.8284));
+    const effectiveQber = isChannelAttack ? (simulateAttack === 'PASSIVE_EAVESDROP' ? 0.28 : 0.42) : (simulateAttack ? 0.0 : (chat.e91Status?.qberEstimate || 0.0));
+
     let verification = null;
     try {
       const verifyRes = await axios.post(`${QDS_URL}/qds/message/verify`, {
@@ -155,9 +162,9 @@ exports.sendMessage = async (req, res) => {
         signerId: senderId.toString(),
         verifierId: recipientId.toString(),
         keyAB: chat.sharedKey,
-        e91Status: chat.e91Status?.channelStatus || 'PASS',
-        chshS: chat.e91Status?.chshS || 2.828,
-        qber: chat.e91Status?.qberEstimate || 0.0,
+        e91Status: effectiveE91Status,
+        chshS: effectiveChshS,
+        qber: effectiveQber,
         isNonceValid,
         isSignerValid: (simulateAttack !== 'IMPERSONATION'),
         isVerifierAuthorized: (simulateAttack !== 'UNAUTHORIZED_VERIFICATION'),
