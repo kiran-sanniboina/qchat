@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const { sendPasswordResetCode } = require('../utils/mailer');
 
 const generateToken = (userId) => {
   return jwt.sign(
@@ -271,6 +272,114 @@ exports.unblockUser = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: 'Error unblocking user.' });
+  }
+};
+
+// Request password reset verification code
+exports.forgotPassword = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database not connected. Please try again later.'
+      });
+    }
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Please provide your registered email address.' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({ error: 'No account registered with this email address.' });
+    }
+
+    // Generate a secure 6-digit numeric OTP code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes validity
+
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordExpires = expiresAt;
+    await user.save();
+
+    // Dispatch verification code to the registered email address
+    const emailResult = await sendPasswordResetCode(user.email, resetCode, user.name);
+
+    return res.status(200).json({
+      message: `A 6-digit verification code has been sent to ${user.email}.`,
+      email: user.email,
+      expiresInMinutes: 15,
+      previewUrl: emailResult?.previewUrl || null
+    });
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    return res.status(500).json({ error: error.message || 'Error processing password reset request.' });
+  }
+};
+
+// Verify code and set new password
+exports.resetPassword = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database not connected. Please try again later.'
+      });
+    }
+
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({
+        error: 'Email address, 6-digit verification code, and new password are required.'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: 'Password must be at least 6 characters long.'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanCode = code.toString().trim();
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email address.' });
+    }
+
+    // Verify code match
+    if (!user.resetPasswordCode || user.resetPasswordCode !== cleanCode) {
+      return res.status(400).json({
+        error: 'Invalid verification code. Please check the code sent to your email and try again.'
+      });
+    }
+
+    // Verify expiration
+    if (!user.resetPasswordExpires || new Date() > user.resetPasswordExpires) {
+      return res.status(400).json({
+        error: 'This verification code has expired. Please request a new code.'
+      });
+    }
+
+    // Hash the new password with bcrypt
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    user.passwordHash = passwordHash;
+    user.resetPasswordCode = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Password has been successfully updated! You can now log in with your new password.',
+      email: user.email
+    });
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    return res.status(500).json({ error: error.message || 'Error updating password.' });
   }
 };
 
