@@ -12,7 +12,9 @@ import {
   Loader2,
   Sparkles,
   ShieldCheck,
-  Smile
+  Smile,
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
@@ -29,6 +31,31 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
   const [copiedKey, setCopiedKey] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  // Link Web QR Desktop Session State
+  const [webPairCode, setWebPairCode] = useState('');
+  const [pairingWeb, setPairingWeb] = useState(false);
+  const [pairResultMsg, setPairResultMsg] = useState(null);
+
+  const handleAuthorizeDesktopSession = async () => {
+    if (!webPairCode.trim()) return;
+    setPairingWeb(true);
+    setPairResultMsg(null);
+    try {
+      const res = await api.post('/auth/qr/authorize', {
+        pairCode: webPairCode.trim()
+      });
+      setPairResultMsg({ success: true, text: res.data.message || 'Desktop session authorized successfully!' });
+      setWebPairCode('');
+    } catch (err) {
+      setPairResultMsg({
+        success: false,
+        text: err.response?.data?.error || err.message || 'Could not authorize desktop session. Check the PIN.'
+      });
+    } finally {
+      setPairingWeb(false);
+    }
+  };
 
   const fileInputRef = useRef(null);
 
@@ -411,6 +438,46 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                   {copiedKey ? 'Copied' : 'Copy'}
                 </button>
               </div>
+            </div>
+
+            {/* Link Desktop Web Session (QR Code Authorization) */}
+            <div className="p-3.5 rounded-xl bg-wa-panel/60 border border-wa-border space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-quantum-cyan" />
+                  <span className="text-xs font-bold text-white">Link Desktop Web (QR PIN)</span>
+                </div>
+                <span className="text-[10px] text-quantum-cyan font-mono bg-quantum-cyan/10 px-2 py-0.5 rounded border border-quantum-cyan/30">
+                  Web Pairing
+                </span>
+              </div>
+              <p className="text-[11px] text-wa-textSecondary leading-relaxed">
+                Looking at the QChat Web login screen on another computer? Enter the 4-digit PIN showing under the QR code to log into that desktop instantly.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  maxLength={8}
+                  value={webPairCode}
+                  onChange={(e) => setWebPairCode(e.target.value.replace(/\s+/g, ''))}
+                  placeholder="e.g. 4-digit PIN"
+                  className="flex-1 bg-wa-bg border border-wa-border rounded-lg px-3 py-2 text-xs font-mono tracking-widest text-center text-white placeholder-wa-textSecondary/40 focus:outline-none focus:border-quantum-cyan"
+                />
+                <button
+                  type="button"
+                  disabled={!webPairCode.trim() || pairingWeb}
+                  onClick={handleAuthorizeDesktopSession}
+                  className="px-3.5 py-2 bg-quantum-cyan hover:bg-quantum-cyan/80 text-black text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                >
+                  {pairingWeb ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  <span>Authorize</span>
+                </button>
+              </div>
+              {pairResultMsg && (
+                <div className={`p-2 rounded text-[11px] font-medium ${pairResultMsg.success ? 'bg-wa-green/20 text-wa-green border border-wa-green/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
+                  {pairResultMsg.text}
+                </div>
+              )}
             </div>
           </div>
 

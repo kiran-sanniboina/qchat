@@ -419,3 +419,212 @@ exports.getEmailStatus = async (req, res) => {
   }
 };
 
+// ==========================================
+// QR CODE LOGIN & DEVICE PAIRING ENGINE
+// ==========================================
+const qrAuthSessions = new Map();
+
+// Periodic cleanup of expired QR sessions (every 60s)
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, session] of qrAuthSessions.entries()) {
+    if (session.expiresAt < now) {
+      qrAuthSessions.delete(id);
+    }
+  }
+}, 60000);
+
+// Initialize a new QR session for Web login
+exports.initQrSession = async (req, res) => {
+  try {
+    const sessionId = 'qchat_qr_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const pairCode = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit readable PIN
+    const expiresAt = Date.now() + 120000; // 2 minutes validity
+
+    qrAuthSessions.set(sessionId, {
+      sessionId,
+      pairCode,
+      status: 'pending',
+      createdAt: Date.now(),
+      expiresAt,
+      token: null,
+      user: null
+    });
+
+    return res.status(200).json({
+      sessionId,
+      pairCode,
+      expiresIn: 120,
+      qrValue: JSON.stringify({
+        app: 'qchat',
+        action: 'link_device',
+        sessionId,
+        pairCode
+      })
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to initialize QR session' });
+  }
+};
+
+// Check status of a QR login session (polled by browser)
+exports.checkQrSessionStatus = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = qrAuthSessions.get(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ status: 'expired', error: 'QR session expired or not found.' });
+    }
+
+    if (Date.now() > session.expiresAt) {
+      qrAuthSessions.delete(sessionId);
+      return res.status(410).json({ status: 'expired', error: 'QR code has expired. Please refresh.' });
+    }
+
+    if (session.status === 'authenticated') {
+      const { token, user } = session;
+      qrAuthSessions.delete(sessionId); // One-time consume
+      return res.status(200).json({
+        status: 'authenticated',
+        token,
+        user
+      });
+    }
+
+    return res.status(200).json({
+      status: session.status,
+      expiresIn: Math.max(0, Math.round((session.expiresAt - Date.now()) / 1000))
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// Authorize a QR session (called by mobile, authenticated device, or demo simulator)
+exports.authorizeQrSession = async (req, res) => {
+  try {
+    const { sessionId, pairCode, demoRole, demoUser, email, password } = req.body;
+    const role = (demoRole || demoUser)?.toLowerCase();
+    let authorizedUser = null;
+
+    // 1. Caller authenticated via JWT token
+    if (req.user) {
+      authorizedUser = req.user;
+    }
+    // 2. Demo role simulator (Alice / Bob)
+    else if (role) {
+      const demoEmail = role === 'alice' ? 'alice@qchat.quantum' : 'bob@qchat.quantum';
+      const demoName = role === 'alice' ? 'Alice (Quantum Node A)' : 'Bob (Quantum Node B)';
+      
+      if (mongoose.connection.readyState !== 1) {
+        // Instant fallback when database is reconnecting
+        authorizedUser = {
+          _id: role === 'alice' ? '650000000000000000000001' : '650000000000000000000002',
+          name: demoName,
+          email: demoEmail,
+          publicIdentity: 'QDS-NODE-' + role.toUpperCase(),
+          avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${role}`,
+          statusBio: 'Quantum Digital Signature Node',
+          phone: '+1 555-0199',
+          isOnline: true,
+          lastSeen: new Date(),
+          blockedUsers: []
+        };
+      } else {
+        try {
+          authorizedUser = await User.findOne({ email: demoEmail });
+          if (!authorizedUser) {
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash('password123', salt);
+            authorizedUser = new User({
+              name: demoName,
+              email: demoEmail,
+              passwordHash,
+              avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${role}`
+            });
+            await authorizedUser.save();
+          }
+        } catch (dbErr) {
+          authorizedUser = {
+            _id: role === 'alice' ? '650000000000000000000001' : '650000000000000000000002',
+            name: demoName,
+            email: demoEmail,
+            publicIdentity: 'QDS-NODE-' + role.toUpperCase(),
+            avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${role}`,
+            statusBio: 'Quantum Digital Signature Node',
+            phone: '+1 555-0199',
+            isOnline: true,
+            lastSeen: new Date(),
+            blockedUsers: []
+          };
+        }
+      }
+    }
+    // 3. Explicit credentials provided
+    else if (email && password) {
+      const user = await User.findOne({ email: email.toLowerCase().trim() });
+      if (!user) return res.status(401).json({ error: 'Invalid email or password.' });
+      const isMatch = await bcrypt.compare(password, user.passwordHash);
+      if (!isMatch) return res.status(401).json({ error: 'Invalid email or password.' });
+      authorizedUser = user;
+    } else {
+      return res.status(400).json({ error: 'Missing authorization credentials or demo role.' });
+    }
+
+    // Locate the QR session
+    let targetSession = sessionId ? qrAuthSessions.get(sessionId) : null;
+    if (!targetSession && pairCode) {
+      for (const s of qrAuthSessions.values()) {
+        if (s.pairCode === pairCode.trim()) {
+          targetSession = s;
+          break;
+        }
+      }
+    }
+
+    if (!targetSession) {
+      return res.status(404).json({ error: 'QR session not found or has expired. Please refresh the QR code on your desktop.' });
+    }
+
+    if (Date.now() > targetSession.expiresAt) {
+      qrAuthSessions.delete(targetSession.sessionId);
+      return res.status(410).json({ error: 'This QR session has expired.' });
+    }
+
+    // Generate authenticated token for the desktop browser
+    const token = generateToken(authorizedUser._id);
+    if (typeof authorizedUser.save === 'function') {
+      authorizedUser.isOnline = true;
+      authorizedUser.lastSeen = new Date();
+      await authorizedUser.save();
+    }
+
+    const userPayload = {
+      id: authorizedUser._id,
+      name: authorizedUser.name,
+      email: authorizedUser.email,
+      publicIdentity: authorizedUser.publicIdentity,
+      avatarUrl: authorizedUser.avatarUrl,
+      statusBio: authorizedUser.statusBio,
+      phone: authorizedUser.phone || '',
+      isOnline: authorizedUser.isOnline,
+      lastSeen: authorizedUser.lastSeen,
+      blockedUsers: authorizedUser.blockedUsers || []
+    };
+
+    targetSession.status = 'authenticated';
+    targetSession.token = token;
+    targetSession.user = userPayload;
+
+    return res.status(200).json({
+      message: 'QR session successfully authorized! Desktop is logging in.',
+      user: userPayload
+    });
+  } catch (error) {
+    console.error('Error authorizing QR session:', error);
+    return res.status(500).json({ error: error.message || 'Error authorizing QR session.' });
+  }
+};
+
+

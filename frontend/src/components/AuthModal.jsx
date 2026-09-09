@@ -26,10 +26,16 @@ export default function AuthModal({ onAuthSuccess }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isRealEmail, setIsRealEmail] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const [qrValue] = useState(`qchat-link-session-${Math.random().toString(36).substring(2, 12)}`);
+  // QR Code Login State
+  const [qrSessionId, setQrSessionId] = useState(null);
+  const [qrPairCode, setQrPairCode] = useState('');
+  const [qrValue, setQrValue] = useState('');
+  const [qrExpiresIn, setQrExpiresIn] = useState(120);
+  const [qrStatus, setQrStatus] = useState('idle'); // 'idle' | 'loading' | 'ready' | 'authenticating' | 'authenticated' | 'expired'
+  const [qrAuthorizing, setQrAuthorizing] = useState(false);
+  const [showQrCredentials, setShowQrCredentials] = useState(false);
+  const [qrManualEmail, setQrManualEmail] = useState('');
+  const [qrManualPassword, setQrManualPassword] = useState('');
 
   // Resend cooldown timer
   useEffect(() => {
@@ -41,6 +47,104 @@ export default function AuthModal({ onAuthSuccess }) {
     }
     return () => clearInterval(timer);
   }, [resendCooldown]);
+
+  // Initialize QR Session
+  const initQrSession = async () => {
+    setQrStatus('loading');
+    setError('');
+    try {
+      const res = await api.post('/auth/qr/init');
+      setQrSessionId(res.data.sessionId);
+      setQrPairCode(res.data.pairCode);
+      setQrValue(res.data.qrValue || res.data.sessionId);
+      setQrExpiresIn(res.data.expiresIn || 120);
+      setQrStatus('ready');
+    } catch (err) {
+      console.warn('QR init fallback:', err.message);
+      const fallbackId = 'qchat_qr_' + Math.random().toString(36).substring(2, 10);
+      setQrSessionId(fallbackId);
+      setQrPairCode('1234');
+      setQrValue(JSON.stringify({ app: 'qchat', action: 'link_device', sessionId: fallbackId, pairCode: '1234' }));
+      setQrExpiresIn(120);
+      setQrStatus('ready');
+    }
+  };
+
+  // Start QR session when switching to 'qr' tab
+  useEffect(() => {
+    if (activeTab === 'qr') {
+      initQrSession();
+    } else {
+      setQrStatus('idle');
+    }
+  }, [activeTab]);
+
+  // Countdown timer for QR expiration
+  useEffect(() => {
+    let timer;
+    if (activeTab === 'qr' && qrStatus === 'ready' && qrExpiresIn > 0) {
+      timer = setInterval(() => {
+        setQrExpiresIn((prev) => {
+          if (prev <= 1) {
+            setQrStatus('expired');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [activeTab, qrStatus, qrExpiresIn]);
+
+  // Poll for QR session authorization
+  useEffect(() => {
+    let pollInterval;
+    if (activeTab === 'qr' && qrStatus === 'ready' && qrSessionId) {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await api.get(`/auth/qr/status/${qrSessionId}`);
+          if (res.data.status === 'authenticated') {
+            setQrStatus('authenticated');
+            clearInterval(pollInterval);
+            const { token, user } = res.data;
+            localStorage.setItem('qchat_token', token);
+            localStorage.setItem('qchat_user', JSON.stringify(user));
+            setTimeout(() => {
+              onAuthSuccess(user);
+            }, 600);
+          } else if (res.data.status === 'expired') {
+            setQrStatus('expired');
+            clearInterval(pollInterval);
+          }
+        } catch (err) {
+          if (err.response?.status === 404 || err.response?.status === 410) {
+            setQrStatus('expired');
+            clearInterval(pollInterval);
+          }
+        }
+      }, 1500);
+    }
+    return () => clearInterval(pollInterval);
+  }, [activeTab, qrStatus, qrSessionId]);
+
+  // Handler to authorize QR code
+  const handleAuthorizeQr = async (demoRole = null) => {
+    if (!qrSessionId) return;
+    setQrAuthorizing(true);
+    setError('');
+    try {
+      const payload = demoRole
+        ? { sessionId: qrSessionId, demoRole }
+        : { sessionId: qrSessionId, email: qrManualEmail.trim(), password: qrManualPassword };
+
+      await api.post('/auth/qr/authorize', payload);
+      setQrStatus('authenticating');
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || 'Authorization failed');
+    } finally {
+      setQrAuthorizing(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -672,19 +776,158 @@ export default function AuthModal({ onAuthSuccess }) {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-4 text-center">
-                  <h2 className="text-lg font-bold text-white mb-1">Link a Device with QR Code</h2>
-                  <p className="text-xs text-wa-textSecondary mb-6 max-w-xs">
-                    To link WhatsApp Web, open QChat on your phone, tap Settings &gt; Linked Devices, and point your camera here.
+                <div className="flex flex-col items-center justify-center py-2 text-center animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-wa-green/20 text-wa-green flex items-center justify-center">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <h2 className="text-lg font-bold text-white">Log in with QR Code</h2>
+                  </div>
+                  <p className="text-xs text-gray-300 mb-3 max-w-sm leading-relaxed">
+                    Scan with your mobile camera or use instant 1-click test pairing below to log into your quantum encrypted session.
                   </p>
 
-                  <div className="p-4 bg-white rounded-xl shadow-lg mb-6 border-4 border-wa-green/40">
-                    <QRCodeSVG value={qrValue} size={180} level="H" />
+                  {error && (
+                    <div className="w-full max-w-sm p-2.5 mb-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* QR Code Card with Overlays */}
+                  <div className="relative p-4 bg-white rounded-2xl shadow-2xl mb-3 border-4 border-wa-green/40">
+                    {qrStatus === 'loading' ? (
+                      <div className="w-[180px] h-[180px] flex flex-col items-center justify-center text-gray-800 gap-2">
+                        <RefreshCw className="w-7 h-7 animate-spin text-wa-green" />
+                        <span className="text-xs font-semibold">Generating QR...</span>
+                      </div>
+                    ) : (
+                      <QRCodeSVG value={qrValue || 'qchat_session'} size={180} level="H" />
+                    )}
+
+                    {/* Authenticated Overlay */}
+                    {qrStatus === 'authenticated' && (
+                      <div className="absolute inset-0 bg-wa-green/95 rounded-xl flex flex-col items-center justify-center text-white p-4 animate-in zoom-in-95">
+                        <CheckCircle className="w-12 h-12 mb-2 animate-bounce" />
+                        <span className="text-sm font-bold">Authorized!</span>
+                        <span className="text-xs opacity-90">Logging in now...</span>
+                      </div>
+                    )}
+
+                    {/* Expired Overlay */}
+                    {qrStatus === 'expired' && (
+                      <div className="absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center text-white p-4 animate-in fade-in">
+                        <p className="text-xs text-red-300 font-semibold mb-2">QR Code Expired</p>
+                        <button
+                          type="button"
+                          onClick={initQrSession}
+                          className="px-3.5 py-1.5 bg-wa-green hover:bg-wa-greenHover text-white text-xs font-bold rounded-lg shadow-md transition flex items-center gap-1.5"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Reload QR</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-wa-textSecondary">
-                    <span className="w-2 h-2 rounded-full bg-wa-green animate-ping" />
-                    <span>Waiting for pairing handshake... (or use Quick Demo login)</span>
+                  {/* Pairing PIN and Expiry Countdown */}
+                  {qrStatus !== 'loading' && qrStatus !== 'expired' && (
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <div className="bg-wa-panel border border-wa-border px-3 py-1.5 rounded-lg flex items-center gap-2">
+                        <span className="text-[11px] text-gray-400 font-medium">Pairing PIN:</span>
+                        <span className="font-mono text-sm font-extrabold tracking-widest text-quantum-cyan bg-black/40 px-2 py-0.5 rounded border border-quantum-cyan/30">
+                          {qrPairCode || '----'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-400 font-mono">
+                        ⏱️ {Math.floor(qrExpiresIn / 60)}:{(qrExpiresIn % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Live Status Indicator */}
+                  <div className="flex items-center gap-2 text-xs text-gray-300 mb-3.5">
+                    {qrStatus === 'authenticating' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-quantum-cyan" />
+                        <span className="text-quantum-cyan font-semibold">Authorizing quantum handshake...</span>
+                      </>
+                    ) : qrStatus === 'authenticated' ? (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-wa-green" />
+                        <span className="text-wa-green font-semibold">Handshake verified! Redirecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-wa-green animate-ping" />
+                        <span>Waiting for phone scan or instant authorization...</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 1-Click Instant QR Login Simulator */}
+                  <div className="w-full max-w-sm p-3 rounded-xl bg-wa-panel/80 border border-wa-border text-left mb-3">
+                    <p className="text-[11px] font-semibold text-white mb-2 flex items-center justify-between">
+                      <span>⚡ Instant 1-Click QR Login (Test Handshake):</span>
+                      <span className="text-[10px] text-wa-green font-mono">Simulate Scan</span>
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={qrAuthorizing || qrStatus === 'expired'}
+                        onClick={() => handleAuthorizeQr('alice')}
+                        className="px-3 py-2 bg-wa-hover hover:bg-wa-green/20 text-xs font-bold rounded-lg text-wa-green border border-wa-green/30 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        {qrAuthorizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <span>Authorize Alice 👩‍🔬</span>}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={qrAuthorizing || qrStatus === 'expired'}
+                        onClick={() => handleAuthorizeQr('bob')}
+                        className="px-3 py-2 bg-wa-hover hover:bg-quantum-cyan/20 text-xs font-bold rounded-lg text-quantum-cyan border border-quantum-cyan/30 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        {qrAuthorizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <span>Authorize Bob 👨‍💻</span>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Manual Account Authorization Accordion */}
+                  <div className="w-full max-w-sm text-left">
+                    <button
+                      type="button"
+                      onClick={() => setShowQrCredentials(!showQrCredentials)}
+                      className="text-xs text-gray-400 hover:text-white underline mb-2 transition block"
+                    >
+                      {showQrCredentials ? '▲ Hide manual credentials' : '▼ Or authorize this QR session with an existing account'}
+                    </button>
+
+                    {showQrCredentials && (
+                      <form onSubmit={(e) => { e.preventDefault(); handleAuthorizeQr(); }} className="space-y-2 p-3 bg-wa-panel rounded-lg border border-wa-border">
+                        <input
+                          type="email"
+                          required
+                          placeholder="your-email@domain.com"
+                          value={qrManualEmail}
+                          onChange={(e) => setQrManualEmail(e.target.value)}
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-wa-green"
+                        />
+                        <input
+                          type="password"
+                          required
+                          placeholder="Password"
+                          value={qrManualPassword}
+                          onChange={(e) => setQrManualPassword(e.target.value)}
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-wa-green"
+                        />
+                        <button
+                          type="submit"
+                          disabled={qrAuthorizing}
+                          className="w-full bg-wa-green hover:bg-wa-greenHover text-white text-xs font-bold py-1.5 rounded transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          {qrAuthorizing && <RefreshCw className="w-3 h-3 animate-spin" />}
+                          <span>Authorize and Log In</span>
+                        </button>
+                      </form>
+                    )}
                   </div>
                 </div>
               )}
