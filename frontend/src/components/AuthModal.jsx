@@ -366,7 +366,7 @@ export default function AuthModal({ onAuthSuccess }) {
                         )}
                       </div>
                       <p className="text-[11px] text-wa-textSecondary leading-normal">
-                        No external SMTP server (Gmail) is configured in backend environment variables. The code has been generated and auto-filled below for instant testing.
+                        Demonstration mode active (no external email API configured). The code has been generated and auto-filled below for instant password reset.
                       </p>
                       {previewUrl && (
                         <div className="pt-0.5">

@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const { sendPasswordResetCode, hasRealSmtpConfig } = require('../utils/mailer');
+const { sendPasswordResetCode, getEmailProviderStatus, hasRealEmailConfig } = require('../utils/mailer');
 
 const generateToken = (userId) => {
   return jwt.sign(
@@ -311,7 +311,7 @@ exports.forgotPassword = async (req, res) => {
     let infoMessage = `A 6-digit verification code has been sent to ${user.email}. Please check your inbox (and spam folder).`;
     if (!isRealDelivered) {
       infoMessage = emailResult?.error
-        ? `Verification code generated for ${user.email} (Email service error: ${emailResult.error}).`
+        ? `Verification code generated for ${user.email} (${emailResult.error}).`
         : `Verification code generated for ${user.email}. Demonstration mode active.`;
     }
 
@@ -320,7 +320,7 @@ exports.forgotPassword = async (req, res) => {
       email: user.email,
       expiresInMinutes: 15,
       isRealEmail: isRealDelivered,
-      previewUrl: emailResult?.previewUrl || null,
+      provider: emailResult?.provider || 'sandbox',
       devCode: isRealDelivered ? null : resetCode
     });
   } catch (error) {
@@ -390,6 +390,32 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Error in resetPassword:', error);
     return res.status(500).json({ error: error.message || 'Error updating password.' });
+  }
+};
+
+// Check email service diagnostic status
+exports.getEmailStatus = async (req, res) => {
+  try {
+    const status = getEmailProviderStatus();
+    const isRender = process.env.RENDER === 'true' || !!process.env.RENDER_SERVICE_ID;
+    return res.status(200).json({
+      status: 'ok',
+      activeProvider: status.provider,
+      providerName: status.name,
+      protocol: status.protocol,
+      port: status.port,
+      description: status.description,
+      isRender,
+      hasRealEmailConfig: hasRealEmailConfig(),
+      supportedHttpsApis: [
+        { name: 'Resend API', envKey: 'RESEND_API_KEY', url: 'https://resend.com' },
+        { name: 'Brevo API', envKey: 'BREVO_API_KEY', url: 'https://brevo.com' },
+        { name: 'SendGrid API', envKey: 'SENDGRID_API_KEY', url: 'https://sendgrid.com' },
+        { name: 'Google Apps Script / Webhook Relay', envKey: 'GMAIL_WEBHOOK_URL' }
+      ]
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 
