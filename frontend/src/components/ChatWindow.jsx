@@ -958,8 +958,8 @@ export default function ChatWindow({
           <div className="flex items-center justify-center gap-1.5 text-amber-300 text-xs font-semibold mb-1">
             <Lock className="w-3.5 h-3.5" /> Quantum End-to-End Encryption
           </div>
-          <p className="text-[11px] text-wa-textSecondary leading-relaxed">
-            Messages are encrypted with AES-256-GCM and bound to simulated Pauli eigenstates via quantum teleportation. E91 channel actively monitored ($S \approx 2.82$).
+          <p className="text-[11px] text-gray-300 leading-relaxed">
+            Messages are encrypted with AES-256-GCM and bound to Pauli eigenstates (|0⟩, |1⟩, |+⟩, |−⟩) via quantum teleportation. E91 channel actively monitored (S ≈ 2.82).
           </p>
         </div>
 

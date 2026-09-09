@@ -178,58 +178,98 @@ export default function AuthModal({ onAuthSuccess }) {
 
       <div className="w-full max-w-4xl bg-wa-panel rounded-lg shadow-2xl overflow-hidden border border-wa-border flex flex-col md:flex-row my-8">
         {/* Left / Info Side */}
-        <div className="md:w-5/12 bg-wa-surface p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-wa-border">
+        <div className="md:w-5/12 bg-wa-surface p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-wa-border">
           <div>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white shadow-lg">
-                <Shield className="w-7 h-7" />
+            {/* Header / Brand */}
+            <div className="flex items-center space-x-3.5 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-wa-green to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-wa-green/20 border border-wa-green/30 shrink-0">
+                <Shield className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                  QChat <span className="text-xs px-2 py-0.5 rounded bg-quantum-purple/30 text-quantum-cyan border border-quantum-cyan/30">QDS v1.0</span>
+                <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                  QChat <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30 font-semibold">QDS v1.0</span>
                 </h1>
-                <p className="text-xs text-wa-textSecondary">Quantum Digital Signature Messenger</p>
+                <p className="text-xs text-gray-300 font-medium">Quantum Digital Signature Messenger</p>
               </div>
             </div>
 
-            <div className="space-y-4 text-sm text-wa-textSecondary mb-8">
-              <div className="flex items-start space-x-3">
-                <Lock className="w-5 h-5 text-wa-green shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-medium">Dual-Layer Security:</span> AES-256-GCM message encryption paired with SHA-256 integrity hashing.
+            {/* Core Security Features */}
+            <div className="space-y-3.5 mb-6">
+              {/* Feature 1: Dual-Layer Security */}
+              <div className="p-3.5 rounded-xl bg-wa-panel/75 border border-wa-border/80 hover:border-wa-green/40 transition">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-wa-green/20 text-wa-green flex items-center justify-center shrink-0 border border-wa-green/30">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white tracking-wide">Dual-Layer Security</h3>
+                </div>
+                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
+                  Full message privacy with authenticated <strong className="text-white">AES-256-GCM</strong> encryption, paired with <strong className="text-white">SHA-256</strong> integrity hashing to eliminate tampering.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2.5 pl-9.5">
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-wa-green border border-wa-green/25">AES-256-GCM</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-wa-green border border-wa-green/25">SHA-256 Hashing</span>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <Cpu className="w-5 h-5 text-quantum-cyan shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-medium">Teleportation QDS:</span> Teleports signature Pauli eigenstates ($|0\rangle, |1\rangle, |+\rangle, |-\rangle$) to Bob with Pauli corrections.
+              {/* Feature 2: Teleportation QDS */}
+              <div className="p-3.5 rounded-xl bg-wa-panel/75 border border-wa-border/80 hover:border-quantum-cyan/40 transition">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-quantum-cyan/20 text-quantum-cyan flex items-center justify-center shrink-0 border border-quantum-cyan/30">
+                    <Cpu className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white tracking-wide">Teleportation QDS</h3>
+                </div>
+                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
+                  Signs every payload by teleporting quantum signature states using entangled Bell pairs with feed-forward Pauli corrections.
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pl-9.5">
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|0⟩</span>
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|1⟩</span>
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|+⟩</span>
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|−⟩</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-gray-200 border border-wa-border">Pauli Feed-Forward</span>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <CheckCircle className="w-5 h-5 text-quantum-emerald shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-medium">Dynamic E91 Layer:</span> Continuous Bell correlation monitoring with real-time CHSH ($S \approx 2.82$) and QBER tracking.
+              {/* Feature 3: Dynamic E91 Layer */}
+              <div className="p-3.5 rounded-xl bg-wa-panel/75 border border-wa-border/80 hover:border-emerald-500/40 transition">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-white tracking-wide">Dynamic E91 Layer</h3>
+                </div>
+                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
+                  Real-time Ekert91 quantum channel monitoring. Verifies Bell correlation violation to instantly detect man-in-the-middle eavesdropping.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2.5 pl-9.5">
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CHSH S ≈ 2.82</span>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">QBER &lt; 11%</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-gray-200 border border-wa-border">Anti-Eavesdrop</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-wa-panel/60 p-4 rounded-lg border border-wa-border">
-            <p className="text-xs text-wa-textSecondary mb-2 font-medium">Quick Demo Profiles (Instant Test):</p>
-            <div className="grid grid-cols-2 gap-2">
+          {/* Quick Demo Profiles */}
+          <div className="bg-wa-panel/80 p-4 rounded-xl border border-wa-border">
+            <p className="text-xs text-gray-200 mb-2.5 font-medium flex items-center justify-between">
+              <span className="font-semibold text-white">Quick Demo Profiles:</span>
+              <span className="text-[10px] text-gray-400 font-mono">1-Click Instant Login</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('alice')}
-                className="px-3 py-2 bg-wa-hover hover:bg-wa-green/20 text-xs font-semibold rounded text-wa-green border border-wa-green/30 transition flex items-center justify-center gap-1.5"
+                className="px-3 py-2.5 bg-wa-hover hover:bg-wa-green/20 text-xs font-bold rounded-lg text-wa-green border border-wa-green/30 transition flex items-center justify-center gap-1.5 shadow-sm"
               >
                 Launch Alice 👩‍🔬
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin('bob')}
-                className="px-3 py-2 bg-wa-hover hover:bg-quantum-cyan/20 text-xs font-semibold rounded text-quantum-cyan border border-quantum-cyan/30 transition flex items-center justify-center gap-1.5"
+                className="px-3 py-2.5 bg-wa-hover hover:bg-quantum-cyan/20 text-xs font-bold rounded-lg text-quantum-cyan border border-quantum-cyan/30 transition flex items-center justify-center gap-1.5 shadow-sm"
               >
                 Launch Bob 👨‍💻
               </button>
