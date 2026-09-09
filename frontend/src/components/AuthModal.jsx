@@ -13,6 +13,8 @@ export default function AuthModal({ onAuthSuccess }) {
     email: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState('');

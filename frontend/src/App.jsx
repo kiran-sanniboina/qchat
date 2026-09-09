@@ -16,8 +16,17 @@ import { ShieldAlert, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('qchat_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('qchat_user');
+      const token = localStorage.getItem('qchat_token');
+      if (!saved || !token) return null;
+      const parsed = JSON.parse(saved);
+      return parsed && (parsed.id || parsed._id || parsed.email) ? parsed : null;
+    } catch {
+      localStorage.removeItem('qchat_user');
+      localStorage.removeItem('qchat_token');
+      return null;
+    }
   });
 
   const [chats, setChats] = useState([]);

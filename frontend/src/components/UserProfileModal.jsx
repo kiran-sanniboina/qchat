@@ -13,8 +13,7 @@ import {
   Sparkles,
   ShieldCheck,
   Smile,
-  Smartphone,
-  QrCode
+  Smartphone
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
