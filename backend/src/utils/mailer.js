@@ -1,55 +1,80 @@
 const nodemailer = require('nodemailer');
 
+const hasRealSmtpConfig = () => {
+  return !!(
+    (process.env.GMAIL_USER && (process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS)) ||
+    (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+  );
+};
+
 // Initialize mail transporter with environmental flexibility
-let transporter = null;
+let cachedTransporter = null;
+let cachedType = null;
 
 const createTransporter = async () => {
-  if (transporter) return transporter;
-
   // 1. Direct Gmail Service
   if (process.env.GMAIL_USER && (process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS)) {
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS
-      }
-    });
-    return transporter;
+    const rawPass = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || '';
+    const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Google App Password
+    const user = process.env.GMAIL_USER.trim();
+    const typeKey = `gmail_${user}`;
+
+    if (!cachedTransporter || cachedType !== typeKey) {
+      cachedTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000
+      });
+      cachedType = typeKey;
+    }
+    return { transporter: cachedTransporter, isReal: true };
   }
 
-  // 2. Custom SMTP Server (SendGrid, Mailgun, Brevo, AWS SES, etc.)
+  // 2. Custom SMTP Server (SendGrid, Mailgun, Brevo, AWS SES, Resend, etc.)
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-    return transporter;
+    const host = process.env.SMTP_HOST.trim();
+    const port = parseInt(process.env.SMTP_PORT || '587', 10);
+    const user = process.env.SMTP_USER.trim();
+    const pass = process.env.SMTP_PASS.trim();
+    const typeKey = `smtp_${host}_${user}`;
+
+    if (!cachedTransporter || cachedType !== typeKey) {
+      cachedTransporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: process.env.SMTP_SECURE === 'true' || port === 465,
+        auth: { user, pass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000
+      });
+      cachedType = typeKey;
+    }
+    return { transporter: cachedTransporter, isReal: true };
   }
 
-  // 3. Fallback Test Account (Ethereal Mail for automated testing / dev)
+  // 3. Fallback Test Account (Ethereal Mail for automated testing / dev sandbox)
   try {
     const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
+    const ethTransporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       secure: false,
       auth: {
         user: testAccount.user,
         pass: testAccount.pass
-      }
+      },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000
     });
-    console.log('[Mailer] Using Ethereal Mail fallback for development testing.');
-    return transporter;
+    console.log('[Mailer] Using Ethereal Mail sandbox for testing.');
+    return { transporter: ethTransporter, isReal: false };
   } catch (err) {
     console.warn('[Mailer] Could not create Ethereal test account:', err.message);
-    // Dummy transporter that logs to console
-    return null;
+    return { transporter: null, isReal: false };
   }
 };
 
@@ -67,8 +92,12 @@ const sendPasswordResetCode = async (toEmail, code, userName = 'User') => {
   console.log(`Expires in: 15 minutes`);
   console.log(`======================================================\n`);
 
+  const fromSender = process.env.EMAIL_FROM ||
+    (process.env.GMAIL_USER ? `"QChat Security" <${process.env.GMAIL_USER}>` :
+    (process.env.SMTP_USER ? `"QChat Security" <${process.env.SMTP_USER}>` : '"QChat Quantum Security" <security@qchat.quantum>'));
+
   const mailOptions = {
-    from: process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || '"QChat Quantum Security" <security@qchat.quantum>',
+    from: fromSender,
     to: toEmail,
     subject: `🔐 QChat Verification Code: ${code}`,
     text: `Hello ${userName},\n\nYour 6-digit password reset verification code for QChat is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you did not request a password reset, please ignore this email or check your account security.\n\n— QChat Quantum Security Team`,
@@ -126,23 +155,39 @@ const sendPasswordResetCode = async (toEmail, code, userName = 'User') => {
   };
 
   try {
-    const activeTransporter = await createTransporter();
-    if (activeTransporter) {
-      const info = await activeTransporter.sendMail(mailOptions);
+    const { transporter, isReal } = await createTransporter();
+    if (transporter) {
+      const info = await transporter.sendMail(mailOptions);
       const previewUrl = nodemailer.getTestMessageUrl(info);
       if (previewUrl) {
-        console.log(`[Mailer] Ethereal Email Preview URL: ${previewUrl}`);
+        console.log(`[Mailer] Test Email Preview URL: ${previewUrl}`);
       }
-      return { success: true, messageId: info.messageId, previewUrl };
+      return {
+        success: true,
+        isRealEmail: isReal,
+        messageId: info.messageId,
+        previewUrl: previewUrl || null
+      };
     }
-    return { success: true, messageId: 'console-log-fallback' };
+    return {
+      success: true,
+      isRealEmail: false,
+      messageId: 'console-log-fallback',
+      previewUrl: null
+    };
   } catch (err) {
     console.warn('[Mailer] Error sending email via transporter:', err.message);
-    // Don't throw, code is still logged to console and returned for seamless UX
-    return { success: false, error: err.message };
+    // Don't throw, return structured failure with error details
+    return {
+      success: false,
+      isRealEmail: false,
+      error: err.message
+    };
   }
 };
 
 module.exports = {
-  sendPasswordResetCode
+  sendPasswordResetCode,
+  hasRealSmtpConfig
 };
+

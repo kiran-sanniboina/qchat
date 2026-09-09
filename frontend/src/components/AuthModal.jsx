@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Shield, Lock, Cpu, CheckCircle, ArrowRight, Smartphone, KeyRound, Mail, ArrowLeft, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, Cpu, CheckCircle, ArrowRight, Smartphone, KeyRound, Mail, ArrowLeft, RefreshCw, Eye, EyeOff, Info, ExternalLink } from 'lucide-react';
 import api from '../api';
 
 export default function AuthModal({ onAuthSuccess }) {
@@ -22,6 +22,9 @@ export default function AuthModal({ onAuthSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [successMsg, setSuccessMsg] = useState('');
+  const [sandboxCode, setSandboxCode] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isRealEmail, setIsRealEmail] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -78,7 +81,13 @@ export default function AuthModal({ onAuthSuccess }) {
 
     try {
       const res = await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
-      setSuccessMsg(res.data.message || `A 6-digit code was sent to ${forgotEmail}`);
+      setSuccessMsg(res.data.message || `A 6-digit code was generated for ${forgotEmail}`);
+      setSandboxCode(res.data.devCode || null);
+      setPreviewUrl(res.data.previewUrl || null);
+      setIsRealEmail(!!res.data.isRealEmail);
+      if (res.data.devCode) {
+        setResetCode(res.data.devCode);
+      }
       setViewMode('forgot_verify');
       setResendCooldown(60);
     } catch (err) {
@@ -117,6 +126,11 @@ export default function AuthModal({ onAuthSuccess }) {
       });
       setViewMode('forgot_success');
       setSuccessMsg(res.data.message || 'Password successfully updated!');
+      setSandboxCode(null);
+      setPreviewUrl(null);
+      setResetCode('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to reset password.');
     } finally {
@@ -326,6 +340,47 @@ export default function AuthModal({ onAuthSuccess }) {
                   {error && (
                     <div className="p-3 mb-4 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
                       {error}
+                    </div>
+                  )}
+
+                  {/* Real Email Dispatched Alert */}
+                  {isRealEmail && (
+                    <div className="p-3 mb-4 rounded bg-wa-green/10 border border-wa-green/30 text-wa-green text-xs flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 shrink-0 text-wa-green" />
+                      <span>Email dispatched to <strong>{forgotEmail}</strong>. Please check your inbox and spam folder.</span>
+                    </div>
+                  )}
+
+                  {/* Demonstration Sandbox Notice (when real SMTP is not configured) */}
+                  {!isRealEmail && (
+                    <div className="p-3.5 mb-4 rounded-lg bg-quantum-cyan/10 border border-quantum-cyan/30 text-xs text-white space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-quantum-cyan flex items-center gap-1.5">
+                          <Info className="w-4 h-4 text-quantum-cyan shrink-0" />
+                          Demo / Sandbox Verification Code:
+                        </span>
+                        {sandboxCode && (
+                          <span className="font-mono text-sm font-bold tracking-widest text-quantum-emerald bg-wa-panel px-2.5 py-0.5 rounded border border-quantum-emerald/40">
+                            {sandboxCode}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-wa-textSecondary leading-normal">
+                        No external SMTP server (Gmail) is configured in backend environment variables. The code has been generated and auto-filled below for instant testing.
+                      </p>
+                      {previewUrl && (
+                        <div className="pt-0.5">
+                          <a
+                            href={previewUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-quantum-cyan hover:underline inline-flex items-center gap-1 font-medium bg-quantum-cyan/10 px-2 py-1 rounded border border-quantum-cyan/20"
+                          >
+                            <span>Open Virtual Email Preview</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
 

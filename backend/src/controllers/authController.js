@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const { sendPasswordResetCode } = require('../utils/mailer');
+const { sendPasswordResetCode, hasRealSmtpConfig } = require('../utils/mailer');
 
 const generateToken = (userId) => {
   return jwt.sign(
@@ -306,12 +306,22 @@ exports.forgotPassword = async (req, res) => {
 
     // Dispatch verification code to the registered email address
     const emailResult = await sendPasswordResetCode(user.email, resetCode, user.name);
+    const isRealDelivered = !!(emailResult && emailResult.success && emailResult.isRealEmail);
+
+    let infoMessage = `A 6-digit verification code has been sent to ${user.email}. Please check your inbox (and spam folder).`;
+    if (!isRealDelivered) {
+      infoMessage = emailResult?.error
+        ? `Verification code generated for ${user.email} (Email service error: ${emailResult.error}).`
+        : `Verification code generated for ${user.email}. Demonstration mode active.`;
+    }
 
     return res.status(200).json({
-      message: `A 6-digit verification code has been sent to ${user.email}.`,
+      message: infoMessage,
       email: user.email,
       expiresInMinutes: 15,
-      previewUrl: emailResult?.previewUrl || null
+      isRealEmail: isRealDelivered,
+      previewUrl: emailResult?.previewUrl || null,
+      devCode: isRealDelivered ? null : resetCode
     });
   } catch (error) {
     console.error('Error in forgotPassword:', error);
