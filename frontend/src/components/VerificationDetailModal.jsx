@@ -129,7 +129,7 @@ export default function VerificationDetailModal({ message, onClose }) {
                 <Cpu className="w-3.5 h-3.5 text-quantum-cyan" /> Pauli Signature Eigenstates & Corrections
               </h4>
               <p className="text-[11px] text-wa-textSecondary mb-3">
-                Each 2-bit chunk of the binding hash maps to a Pauli state: 00 &rarr; |0&rang;, 01 &rarr; |1&rang;, 10 &rarr; |+&rang;, 11 &rarr; |-&rang;.
+                Each 2-bit chunk of the binding hash maps to a Pauli state: 00 → |0⟩, 01 → |1⟩, 10 → |+⟩, 11 → |−⟩.
               </p>
 
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 font-mono text-[11px]">
