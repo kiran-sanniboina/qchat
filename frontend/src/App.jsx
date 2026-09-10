@@ -168,8 +168,15 @@ export default function App() {
 
     // Chat cleared handler
     const handleChatCleared = (data) => {
-      if (activeChat && activeChat._id === data.chatId && data.userId === currentUser.id) {
-        setMessages([]);
+      const myId = String(currentUser?.id || currentUser?._id || '');
+      if (String(data.userId) === myId) {
+        if (activeChat && activeChat._id === data.chatId) {
+          setMessages([]);
+          setActiveChat((prev) => (prev ? { ...prev, lastMessage: null } : prev));
+        }
+        setChats((prev) =>
+          prev.map((c) => (c._id === data.chatId ? { ...c, lastMessage: null } : c))
+        );
       }
     };
 
@@ -238,6 +245,32 @@ export default function App() {
             : m
         )
       );
+      setChats((prevChats) =>
+        prevChats.map((c) =>
+          (c.lastMessage?._id || c.lastMessage) === data.messageId
+            ? {
+                ...c,
+                lastMessage: {
+                  ...c.lastMessage,
+                  isDeletedForEveryone: true,
+                  plaintextPreview: 'This message was deleted'
+                }
+              }
+            : c
+        )
+      );
+      setActiveChat((prevChat) =>
+        prevChat && (prevChat.lastMessage?._id || prevChat.lastMessage) === data.messageId
+          ? {
+              ...prevChat,
+              lastMessage: {
+                ...prevChat.lastMessage,
+                isDeletedForEveryone: true,
+                plaintextPreview: 'This message was deleted'
+              }
+            }
+          : prevChat
+      );
     };
 
     socket.on('message:new', handleNewMessage);
@@ -297,6 +330,66 @@ export default function App() {
   const handleClearMessages = (chatId) => {
     if (activeChat?._id === chatId) {
       setMessages([]);
+      setActiveChat((prev) => (prev ? { ...prev, lastMessage: null } : prev));
+    }
+    setChats((prev) =>
+      prev.map((c) => (c._id === chatId ? { ...c, lastMessage: null } : c))
+    );
+  };
+
+  const handleDeleteMessage = (messageId, deleteForEveryone) => {
+    if (deleteForEveryone) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === messageId
+            ? { ...m, isDeletedForEveryone: true, plaintextPreview: 'This message was deleted' }
+            : m
+        )
+      );
+      setChats((prev) =>
+        prev.map((c) =>
+          (c.lastMessage?._id || c.lastMessage) === messageId
+            ? {
+                ...c,
+                lastMessage: {
+                  ...c.lastMessage,
+                  isDeletedForEveryone: true,
+                  plaintextPreview: 'This message was deleted'
+                }
+              }
+            : c
+        )
+      );
+      setActiveChat((prev) =>
+        prev && (prev.lastMessage?._id || prev.lastMessage) === messageId
+          ? {
+              ...prev,
+              lastMessage: {
+                ...prev.lastMessage,
+                isDeletedForEveryone: true,
+                plaintextPreview: 'This message was deleted'
+              }
+            }
+          : prev
+      );
+    } else {
+      setMessages((prev) => {
+        const remaining = prev.filter((m) => m._id !== messageId);
+        const newLast = remaining.length > 0 ? remaining[remaining.length - 1] : null;
+        setChats((prevChats) =>
+          prevChats.map((c) =>
+            c._id === activeChat?._id && (c.lastMessage?._id || c.lastMessage) === messageId
+              ? { ...c, lastMessage: newLast }
+              : c
+          )
+        );
+        setActiveChat((prevChat) =>
+          prevChat && (prevChat.lastMessage?._id || prevChat.lastMessage) === messageId
+            ? { ...prevChat, lastMessage: newLast }
+            : prevChat
+        );
+        return remaining;
+      });
     }
   };
 
@@ -395,6 +488,7 @@ export default function App() {
             onSelectMessageVerification={(msg) => setSelectedMessageForVer(msg)}
             onUpdateCurrentUser={handleUpdateCurrentUser}
             onClearChat={handleClearMessages}
+            onDeleteMessage={handleDeleteMessage}
             onOpenChatProfile={() => setShowChatProfileModal(true)}
             onOpenUserProfile={() => setShowUserProfileModal(true)}
             onOpenStorageManager={() => setShowStorageManagerModal(true)}

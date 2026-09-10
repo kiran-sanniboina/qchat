@@ -444,8 +444,10 @@ exports.deleteMessage = async (req, res) => {
         });
       }
     } else {
-      msg.deletedForUsers.push(currentUserId);
-      await msg.save();
+      if (!msg.deletedForUsers.some(id => id.toString() === currentUserId.toString())) {
+        msg.deletedForUsers.push(currentUserId);
+        await msg.save();
+      }
     }
 
     return res.status(200).json({ success: true });

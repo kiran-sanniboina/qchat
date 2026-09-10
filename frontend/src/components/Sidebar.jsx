@@ -86,7 +86,12 @@ export default function Sidebar({
       return chat.isGroup;
     }
     if (activeFolder === 'unread') {
-      const lastMsg = chat.lastMessage;
+      const rawMsg = chat.lastMessage;
+      const isDel = Boolean(
+        rawMsg?.deletedForUsers &&
+        rawMsg.deletedForUsers.some((id) => String(id?._id || id) === myId)
+      );
+      const lastMsg = isDel ? null : rawMsg;
       const isMyMsg = lastMsg && String(lastMsg.senderId?._id || lastMsg.senderId) === myId;
       return lastMsg && !isMyMsg && lastMsg.deliveryState !== 'read';
     }
@@ -288,7 +293,23 @@ export default function Sidebar({
       <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-wa-panel border-b border-wa-border overflow-x-auto no-scrollbar shrink-0">
         {[
           { id: 'all', label: 'All', count: chats.length },
-          { id: 'unread', label: 'Unread', count: chats.filter(c => c.lastMessage && String(c.lastMessage.senderId?._id || c.lastMessage.senderId) !== myId && c.lastMessage.deliveryState !== 'read').length },
+          {
+            id: 'unread',
+            label: 'Unread',
+            count: chats.filter((c) => {
+              const rawMsg = c.lastMessage;
+              const isDel = Boolean(
+                rawMsg?.deletedForUsers &&
+                rawMsg.deletedForUsers.some((id) => String(id?._id || id) === myId)
+              );
+              const lastMsg = isDel ? null : rawMsg;
+              return (
+                lastMsg &&
+                String(lastMsg.senderId?._id || lastMsg.senderId) !== myId &&
+                lastMsg.deliveryState !== 'read'
+              );
+            }).length
+          },
           { id: 'pinned', label: 'Pinned', count: chats.filter(c => c.pinnedBy && c.pinnedBy.some(id => String(id?._id || id) === myId)).length },
           { id: 'groups', label: 'Groups', count: chats.filter(c => c.isGroup).length }
         ].map((tab) => {
@@ -341,7 +362,12 @@ export default function Sidebar({
             const fallbackSeed = chat.isGroup ? chat._id : (otherParticipant?.email || displayName);
             const displayAvatar = getResolvedAvatar(rawAvatar, fallbackSeed, displayName);
 
-            const lastMsg = chat.lastMessage;
+            const rawLastMsg = chat.lastMessage;
+            const isDeletedForMe = Boolean(
+              rawLastMsg?.deletedForUsers &&
+              rawLastMsg.deletedForUsers.some((id) => String(id?._id || id) === myId)
+            );
+            const lastMsg = isDeletedForMe ? null : rawLastMsg;
             const isLastMsgRejected = lastMsg?.deliveryState === 'rejected';
             const isLastMsgVerified = lastMsg?.deliveryState === 'verified';
 
@@ -387,7 +413,7 @@ export default function Sidebar({
                     </div>
                     <div className="flex items-center space-x-1.5 shrink-0">
                       <span className="text-[11px] text-wa-textSecondary font-medium">
-                        {formatTimestamp(lastMsg?.createdAt || chat.updatedAt)}
+                        {lastMsg ? formatTimestamp(lastMsg.createdAt) : ''}
                       </span>
 
                       {/* Chat Options Trigger */}

@@ -15,6 +15,35 @@ if (rawQdsUrl && !rawQdsUrl.startsWith('http://') && !rawQdsUrl.startsWith('http
 }
 const QDS_URL = rawQdsUrl.replace(/\/+$/, '');
 
+// Helper to resolve the correct lastMessage for a user, taking deletedForUsers into account
+const resolveChatLastMessage = async (chatDoc, currentUserId) => {
+  if (!chatDoc) return chatDoc;
+  const chatObj = chatDoc.toObject ? chatDoc.toObject() : { ...chatDoc };
+
+  if (chatObj.lastMessage) {
+    const isDeletedForMe =
+      chatObj.lastMessage.deletedForUsers &&
+      chatObj.lastMessage.deletedForUsers.some(
+        (id) => (id?._id || id).toString() === currentUserId.toString()
+      );
+
+    if (isDeletedForMe) {
+      const fallbackMsg = await Message.findOne({
+        chatId: chatObj._id,
+        deletedForUsers: { $ne: currentUserId }
+      })
+        .populate('senderId', 'name')
+        .sort({ createdAt: -1 });
+
+      chatObj.lastMessage = fallbackMsg
+        ? (fallbackMsg.toObject ? fallbackMsg.toObject() : fallbackMsg)
+        : null;
+    }
+  }
+
+  return chatObj;
+};
+
 // List chats for current user
 exports.getUserChats = async (req, res) => {
   try {
@@ -42,7 +71,12 @@ exports.getUserChats = async (req, res) => {
       return new Date(b.updatedAt) - new Date(a.updatedAt);
     });
 
-    return res.status(200).json({ chats: sortedChats });
+    // Resolve per-user lastMessage taking deletedForUsers into account
+    const resolvedChats = await Promise.all(
+      sortedChats.map((c) => resolveChatLastMessage(c, currentUserId))
+    );
+
+    return res.status(200).json({ chats: resolvedChats });
   } catch (error) {
     console.error('Error getting user chats:', error);
     return res.status(500).json({ error: 'Server error fetching chats.' });
@@ -69,7 +103,8 @@ exports.createChat = async (req, res) => {
         .populate('lastMessage');
 
       if (existingChat) {
-        return res.status(200).json({ chat: existingChat, isExisting: true });
+        const resolvedChat = await resolveChatLastMessage(existingChat, currentUserId);
+        return res.status(200).json({ chat: resolvedChat, isExisting: true });
       }
     }
 
@@ -165,7 +200,8 @@ exports.getChatById = async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized. Not a participant in this chat.' });
     }
 
-    return res.status(200).json({ chat });
+    const resolvedChat = await resolveChatLastMessage(chat, req.user._id);
+    return res.status(200).json({ chat: resolvedChat });
   } catch (error) {
     return res.status(500).json({ error: 'Server error fetching chat.' });
   }

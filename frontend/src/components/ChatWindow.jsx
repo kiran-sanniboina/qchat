@@ -192,6 +192,7 @@ export default function ChatWindow({
   onSelectMessageVerification,
   onUpdateCurrentUser,
   onClearChat,
+  onDeleteMessage,
   onOpenChatProfile,
   onOpenUserProfile,
   onOpenBackup,
@@ -518,6 +519,9 @@ export default function ChatWindow({
       await api.delete(`/messages/${deleteModalData.messageId}`, {
         data: { deleteForEveryone }
       });
+      if (onDeleteMessage) {
+        onDeleteMessage(deleteModalData.messageId, deleteForEveryone);
+      }
       setDeleteModalData(null);
       showToast(deleteForEveryone ? 'Deleted for everyone' : 'Deleted for you');
     } catch (err) {
