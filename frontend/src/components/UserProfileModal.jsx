@@ -13,12 +13,16 @@ import {
   Sparkles,
   ShieldCheck,
   Smile,
-  Smartphone
+  Smartphone,
+  Sun,
+  Moon
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
+import { useTheme } from '../context/ThemeContext';
 
 export default function UserProfileModal({ currentUser, onClose, onUpdateUser }) {
+  const { theme, setTheme, isDark } = useTheme();
   const [name, setName] = useState(currentUser?.name || '');
   const [statusBio, setStatusBio] = useState(currentUser?.statusBio || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
@@ -216,13 +220,13 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
               <User className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-white leading-tight truncate">Edit Profile</h2>
+              <h2 className="text-sm sm:text-base font-bold text-wa-textPrimary leading-tight truncate">Edit Profile</h2>
               <p className="text-[11px] text-wa-textSecondary truncate">Manage identity & credentials</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -357,7 +361,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                 placeholder="Enter your name"
                 required
                 maxLength={60}
-                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition"
+                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition"
               />
             </div>
 
@@ -372,7 +376,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                 placeholder="Say something about yourself..."
                 rows={2}
                 maxLength={140}
-                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2 text-xs text-white placeholder-wa-textSecondary focus:outline-none focus:border-quantum-cyan transition resize-none"
+                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2 text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-quantum-cyan transition resize-none"
               />
               {/* Quick Status Chips */}
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -381,7 +385,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                     key={opt}
                     type="button"
                     onClick={() => setStatusBio(opt)}
-                    className="text-[10px] px-2 py-1 rounded bg-wa-surface hover:bg-wa-hover border border-wa-border text-wa-textSecondary hover:text-white transition truncate max-w-[200px]"
+                    className="text-[10px] px-2 py-1 rounded bg-wa-surface hover:bg-wa-hover border border-wa-border text-wa-textSecondary hover:text-wa-textPrimary transition truncate max-w-[200px]"
                   >
                     {opt}
                   </button>
@@ -400,7 +404,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 (555) 019-2834"
                 maxLength={30}
-                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-quantum-purple transition font-mono"
+                className="w-full bg-wa-panel border border-wa-border rounded-lg px-3.5 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-quantum-purple transition font-mono"
               />
             </div>
 
@@ -439,12 +443,60 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
               </div>
             </div>
 
+            {/* Appearance / Theme Settings */}
+            <div className="p-3.5 rounded-xl bg-wa-panel/60 border border-wa-border space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isDark ? <Moon className="w-4 h-4 text-quantum-cyan" /> : <Sun className="w-4 h-4 text-amber-400" />}
+                  <span className="text-xs font-bold text-wa-textPrimary">Appearance & Theme</span>
+                </div>
+                <span className="text-[10px] text-wa-textSecondary font-mono uppercase bg-wa-surface px-2 py-0.5 rounded border border-wa-border">
+                  {theme} mode
+                </span>
+              </div>
+              <p className="text-[11px] text-wa-textSecondary leading-relaxed">
+                Choose between WhatsApp Web classic dark theme and high-contrast light theme.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition ${
+                    isDark
+                      ? 'border-wa-green bg-wa-green/15 text-wa-textPrimary ring-1 ring-wa-green'
+                      : 'border-wa-border bg-wa-surface hover:bg-wa-hover text-wa-textSecondary'
+                  }`}
+                >
+                  <Moon className="w-4 h-4 text-quantum-cyan shrink-0" />
+                  <div className="text-left">
+                    <div className="text-xs font-semibold text-wa-textPrimary">Dark Theme</div>
+                    <div className="text-[10px] text-wa-textSecondary">Classic WhatsApp dark</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition ${
+                    !isDark
+                      ? 'border-wa-green bg-wa-green/15 text-wa-textPrimary ring-1 ring-wa-green'
+                      : 'border-wa-border bg-wa-surface hover:bg-wa-hover text-wa-textSecondary'
+                  }`}
+                >
+                  <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div className="text-left">
+                    <div className="text-xs font-semibold text-wa-textPrimary">Light Theme</div>
+                    <div className="text-[10px] text-wa-textSecondary">Clean mint & white</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             {/* Link Desktop Web Session (QR Code Authorization) */}
             <div className="p-3.5 rounded-xl bg-wa-panel/60 border border-wa-border space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-quantum-cyan" />
-                  <span className="text-xs font-bold text-white">Link Desktop Web (QR PIN)</span>
+                  <span className="text-xs font-bold text-wa-textPrimary">Link Desktop Web (QR PIN)</span>
                 </div>
                 <span className="text-[10px] text-quantum-cyan font-mono bg-quantum-cyan/10 px-2 py-0.5 rounded border border-quantum-cyan/30">
                   Web Pairing
@@ -460,7 +512,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                   value={webPairCode}
                   onChange={(e) => setWebPairCode(e.target.value.replace(/\s+/g, ''))}
                   placeholder="e.g. 4-digit PIN"
-                  className="flex-1 bg-wa-bg border border-wa-border rounded-lg px-3 py-2 text-xs font-mono tracking-widest text-center text-white placeholder-wa-textSecondary/40 focus:outline-none focus:border-quantum-cyan"
+                  className="flex-1 bg-wa-bg border border-wa-border rounded-lg px-3 py-2 text-xs font-mono tracking-widest text-center text-wa-textPrimary placeholder-wa-textSecondary/40 focus:outline-none focus:border-quantum-cyan"
                 />
                 <button
                   type="button"
@@ -504,7 +556,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 sm:px-4 py-2 text-xs text-wa-textSecondary hover:text-white hover:bg-wa-hover rounded-lg transition"
+              className="px-3.5 sm:px-4 py-2 text-xs text-wa-textSecondary hover:text-wa-textPrimary hover:bg-wa-hover rounded-lg transition"
             >
               Cancel
             </button>

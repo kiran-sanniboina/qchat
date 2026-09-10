@@ -21,10 +21,13 @@ import {
   HardDrive,
   Star,
   Trash2,
-  Folder
+  Folder,
+  Sun,
+  Moon
 } from 'lucide-react';
 import api from '../api';
 import { getResolvedAvatar, handleAvatarError } from '../utils/avatarHelper';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Sidebar({
   currentUser,
@@ -39,6 +42,7 @@ export default function Sidebar({
   onChatsUpdated,
   onLogout
 }) {
+  const { theme, toggleTheme, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeFolder, setActiveFolder] = useState('all'); // 'all' | 'unread' | 'groups' | 'pinned'
@@ -125,7 +129,7 @@ export default function Sidebar({
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-wa-green ring-2 ring-wa-surface" title="Online" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-white leading-tight flex items-center gap-1.5 group-hover:text-wa-green transition truncate max-w-[130px] sm:max-w-[180px]">
+            <span className="text-sm font-semibold text-wa-textPrimary leading-tight flex items-center gap-1.5 group-hover:text-wa-green transition truncate max-w-[130px] sm:max-w-[180px]">
               {currentUser.name}
             </span>
             <span className="text-[11px] text-quantum-cyan flex items-center gap-1 font-mono">
@@ -135,7 +139,7 @@ export default function Sidebar({
         </div>
 
         {/* Action Icons */}
-        <div className="flex items-center space-x-2 text-wa-textSecondary relative">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 text-wa-textSecondary relative">
           {/* Security Dashboard Button */}
           <button
             onClick={onOpenSecurityDashboard}
@@ -146,11 +150,26 @@ export default function Sidebar({
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-quantum-cyan animate-ping" />
           </button>
 
+          {/* Quick Theme Toggle Button (Light/Dark) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition relative"
+            aria-label="Toggle theme"
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-amber-400 hover:rotate-45 transition-transform duration-300" />
+            ) : (
+              <Moon className="w-5 h-5 text-indigo-500 hover:-rotate-12 transition-transform duration-300" />
+            )}
+          </button>
+
           {/* New Chat Button */}
           <button
             onClick={onOpenNewChatModal}
             title="New Chat / Group"
-            className="p-2 hover:bg-wa-hover hover:text-white rounded-full transition"
+            className="p-2 hover:bg-wa-hover hover:text-wa-textPrimary rounded-full transition"
           >
             <MessageSquarePlus className="w-5 h-5" />
           </button>
@@ -159,19 +178,31 @@ export default function Sidebar({
           <button
             onClick={() => setShowDropdown(!showDropdown)}
             title="Menu"
-            className="p-2 hover:bg-wa-hover hover:text-white rounded-full transition"
+            className="p-2 hover:bg-wa-hover hover:text-wa-textPrimary rounded-full transition"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
 
           {/* Menu Popup */}
           {showDropdown && (
-            <div className="absolute right-0 top-12 w-48 bg-wa-surface rounded-lg shadow-xl border border-wa-border py-1.5 z-50 text-sm text-wa-textPrimary animate-in fade-in zoom-in-95">
+            <div className="absolute right-0 top-12 w-52 bg-wa-surface rounded-lg shadow-xl border border-wa-border py-1.5 z-50 text-sm text-wa-textPrimary animate-in fade-in zoom-in-95">
               <button
                 onClick={() => { setShowDropdown(false); onOpenUserProfile(); }}
-                className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-white"
+                className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center gap-2.5 text-xs text-wa-textPrimary"
               >
                 <User className="w-4 h-4 text-wa-green" /> Profile & Details
+              </button>
+              <button
+                onClick={() => { setShowDropdown(false); toggleTheme(); }}
+                className="w-full px-4 py-2 text-left hover:bg-wa-hover flex items-center justify-between text-xs text-wa-textPrimary"
+              >
+                <div className="flex items-center gap-2.5">
+                  {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                  <span>{isDark ? 'Light Theme' : 'Dark Theme'}</span>
+                </div>
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-wa-bg border border-wa-border text-wa-textSecondary">
+                  {theme}
+                </span>
               </button>
               <button
                 onClick={() => { setShowDropdown(false); onOpenNewChatModal(); }}
@@ -223,7 +254,7 @@ export default function Sidebar({
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-semibold text-white flex items-center gap-1.5">
+            <div className="text-xs font-semibold text-wa-textPrimary flex items-center gap-1.5">
               Quantum Entanglement Shield
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-wa-green/20 text-wa-green border border-wa-green/30">
                 PASS
@@ -248,7 +279,7 @@ export default function Sidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search or start a new chat"
-            className="w-full bg-transparent text-xs text-white placeholder-wa-textSecondary focus:outline-none"
+            className="w-full bg-transparent text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none"
           />
         </div>
       </div>
@@ -344,7 +375,7 @@ export default function Sidebar({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-1.5 min-w-0 pr-2">
-                      <h3 className="text-sm font-semibold text-white truncate">
+                      <h3 className="text-sm font-semibold text-wa-textPrimary truncate">
                         {displayName}
                       </h3>
                       {isPinned && (
@@ -366,7 +397,7 @@ export default function Sidebar({
                           e.stopPropagation();
                           setChatMenuOpenId(isMenuOpen ? null : chat._id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-wa-textSecondary hover:text-white rounded-full transition"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
                         title="Chat options"
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
@@ -378,7 +409,7 @@ export default function Sidebar({
                   {isMenuOpen && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute right-4 top-10 w-40 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-white animate-in fade-in zoom-in-95"
+                      className="absolute right-4 top-10 w-40 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-wa-textPrimary animate-in fade-in zoom-in-95"
                     >
                       <button
                         type="button"

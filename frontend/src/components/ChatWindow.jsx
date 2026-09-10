@@ -696,7 +696,7 @@ export default function ChatWindow({
               )}
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-white leading-tight group-hover:text-quantum-cyan transition truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[280px] md:max-w-none">
+              <h2 className="text-sm font-semibold text-wa-textPrimary leading-tight group-hover:text-quantum-cyan transition truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[280px] md:max-w-none">
                 {title}
               </h2>
               <p className="text-[11px] text-wa-textSecondary flex items-center gap-1.5 font-medium truncate">
@@ -745,7 +745,7 @@ export default function ChatWindow({
             className="p-2 hover:bg-wa-hover text-quantum-cyan rounded-full transition flex items-center gap-1.5 text-xs font-semibold"
           >
             <ShieldCheck className="w-5 h-5 text-wa-green" />
-            <span className="hidden md:inline text-white">Security Panel</span>
+            <span className="hidden md:inline text-wa-textPrimary">Security Panel</span>
           </button>
 
           {/* Options Dropdown Menu */}
@@ -754,7 +754,7 @@ export default function ChatWindow({
               onClick={() => setShowMenu(!showMenu)}
               title="More options"
               className={`p-2 rounded-full transition ${
-                showMenu ? 'bg-wa-hover text-white' : 'hover:bg-wa-hover text-wa-textSecondary hover:text-white'
+                showMenu ? 'bg-wa-hover text-wa-textPrimary' : 'hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary'
               }`}
             >
               <MoreVertical className="w-5 h-5" />
@@ -778,7 +778,7 @@ export default function ChatWindow({
                     setShowMenu(false);
                     if (onOpenChatProfile) onOpenChatProfile();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                 >
                   <User className="w-4 h-4 text-quantum-cyan" />
                   <span>{activeChat?.isGroup ? 'Group Details' : 'Contact Info & Security'}</span>
@@ -790,7 +790,7 @@ export default function ChatWindow({
                       setShowMenu(false);
                       onOpenStorageManager();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                    className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                   >
                     <HardDrive className="w-4 h-4 text-quantum-cyan" />
                     <span>Storage Manager</span>
@@ -803,7 +803,7 @@ export default function ChatWindow({
                       setShowMenu(false);
                       onOpenStarredMessages();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                    className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                   >
                     <Star className="w-4 h-4 fill-amber-400/40 text-amber-400" />
                     <span>Starred Messages</span>
@@ -816,7 +816,7 @@ export default function ChatWindow({
                       setShowMenu(false);
                       onOpenUserProfile();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                    className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                   >
                     <Settings className="w-4 h-4 text-wa-green" />
                     <span>My Profile Settings</span>
@@ -828,7 +828,7 @@ export default function ChatWindow({
                     setShowMenu(false);
                     if (onOpenBackup) onOpenBackup(activeChat);
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                 >
                   <Archive className="w-4 h-4 text-quantum-cyan" />
                   <span>Backup & Restore</span>
@@ -841,7 +841,7 @@ export default function ChatWindow({
                     setShowClearModal(true);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs text-white hover:bg-wa-hover flex items-center gap-2.5 transition"
+                  className="w-full px-4 py-2.5 text-left text-xs text-wa-textPrimary hover:bg-wa-hover flex items-center gap-2.5 transition"
                 >
                   <Trash2 className="w-4 h-4 text-wa-textSecondary" />
                   <span>Clear Chat</span>
@@ -1101,8 +1101,8 @@ export default function ChatWindow({
                   isRejected
                     ? 'bg-red-950/70 border border-red-500/50 text-red-200'
                     : isSender
-                    ? 'bg-wa-outgoing text-white rounded-tr-none'
-                    : 'bg-wa-incoming text-white rounded-tl-none'
+                    ? 'bg-wa-outgoing text-wa-textPrimary rounded-tr-none'
+                    : 'bg-wa-incoming text-wa-textPrimary rounded-tl-none'
                 }`}
               >
                 {/* Forwarded Header */}
@@ -1646,7 +1646,7 @@ export default function ChatWindow({
                   ? 'Edit your message...'
                   : 'Type a message...'
               }
-              className="w-full bg-wa-panel border border-wa-border rounded-xl px-3.5 py-2 sm:py-2.5 text-sm text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition min-w-0"
+              className="w-full bg-wa-panel border border-wa-border rounded-xl px-3.5 py-2 sm:py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green transition min-w-0"
             />
 
             {/* If input has text or user is editing -> Show Send Button. Otherwise show Voice Note Mic Button */}

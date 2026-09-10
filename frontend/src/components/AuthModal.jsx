@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Shield, Lock, Cpu, CheckCircle, ArrowRight, Smartphone, KeyRound, Mail, ArrowLeft, RefreshCw, Eye, EyeOff, Info, ExternalLink } from 'lucide-react';
+import { Shield, Lock, Cpu, CheckCircle, ArrowRight, Smartphone, KeyRound, Mail, ArrowLeft, RefreshCw, Eye, EyeOff, Info, ExternalLink, Sun, Moon } from 'lucide-react';
 import api from '../api';
+import { useTheme } from '../context/ThemeContext';
 
 export default function AuthModal({ onAuthSuccess }) {
+  const { theme, toggleTheme, isDark } = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [activeTab, setActiveTab] = useState('credentials'); // 'credentials' | 'qr'
   const [viewMode, setViewMode] = useState('auth'); // 'auth' | 'forgot_request' | 'forgot_verify' | 'forgot_success'
@@ -279,6 +281,28 @@ export default function AuthModal({ onAuthSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-wa-bg flex items-center justify-center p-4 z-50 overflow-y-auto">
+      {/* Floating Theme Toggle Switch */}
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-wa-panel/90 backdrop-blur border border-wa-border shadow-lg text-wa-textPrimary hover:bg-wa-hover transition text-xs font-medium"
+        >
+          {isDark ? (
+            <>
+              <Sun className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Light Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-4 h-4 text-indigo-500" />
+              <span className="hidden sm:inline">Dark Mode</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* WhatsApp Web Green Top Banner Background */}
       <div className="absolute top-0 left-0 right-0 h-48 bg-wa-green -z-10" />
 
@@ -292,10 +316,10 @@ export default function AuthModal({ onAuthSuccess }) {
                 <Shield className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                <h1 className="text-2xl font-extrabold text-wa-textPrimary tracking-tight flex items-center gap-2">
                   QChat <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30 font-semibold">QDS v1.0</span>
                 </h1>
-                <p className="text-xs text-gray-300 font-medium">Quantum Digital Signature Messenger</p>
+                <p className="text-xs text-wa-textSecondary font-medium">Quantum Digital Signature Messenger</p>
               </div>
             </div>
 
@@ -307,10 +331,10 @@ export default function AuthModal({ onAuthSuccess }) {
                   <div className="w-7 h-7 rounded-lg bg-wa-green/20 text-wa-green flex items-center justify-center shrink-0 border border-wa-green/30">
                     <Lock className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">Dual-Layer Security</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary tracking-wide">Dual-Layer Security</h3>
                 </div>
-                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
-                  Full message privacy with authenticated <strong className="text-white">AES-256-GCM</strong> encryption, paired with <strong className="text-white">SHA-256</strong> integrity hashing to eliminate tampering.
+                <p className="text-xs text-wa-textSecondary leading-relaxed pl-9.5">
+                  Full message privacy with authenticated <strong className="text-wa-textPrimary">AES-256-GCM</strong> encryption, paired with <strong className="text-wa-textPrimary">SHA-256</strong> integrity hashing to eliminate tampering.
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2.5 pl-9.5">
                   <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-wa-green border border-wa-green/25">AES-256-GCM</span>
@@ -324,9 +348,9 @@ export default function AuthModal({ onAuthSuccess }) {
                   <div className="w-7 h-7 rounded-lg bg-quantum-cyan/20 text-quantum-cyan flex items-center justify-center shrink-0 border border-quantum-cyan/30">
                     <Cpu className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">Teleportation QDS</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary tracking-wide">Teleportation QDS</h3>
                 </div>
-                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
+                <p className="text-xs text-wa-textSecondary leading-relaxed pl-9.5">
                   Signs every payload by teleporting quantum signature states using entangled Bell pairs with feed-forward Pauli corrections.
                 </p>
                 <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pl-9.5">
@@ -334,7 +358,7 @@ export default function AuthModal({ onAuthSuccess }) {
                   <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|1⟩</span>
                   <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|+⟩</span>
                   <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-quantum-cyan/15 text-quantum-cyan border border-quantum-cyan/30">|−⟩</span>
-                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-gray-200 border border-wa-border">Pauli Feed-Forward</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-wa-textSecondary border border-wa-border">Pauli Feed-Forward</span>
                 </div>
               </div>
 
@@ -344,15 +368,15 @@ export default function AuthModal({ onAuthSuccess }) {
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
                     <CheckCircle className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">Dynamic E91 Layer</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary tracking-wide">Dynamic E91 Layer</h3>
                 </div>
-                <p className="text-xs text-gray-200 leading-relaxed pl-9.5">
+                <p className="text-xs text-wa-textSecondary leading-relaxed pl-9.5">
                   Real-time Ekert91 quantum channel monitoring. Verifies Bell correlation violation to instantly detect man-in-the-middle eavesdropping.
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2.5 pl-9.5">
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CHSH S ≈ 2.82</span>
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">QBER &lt; 11%</span>
-                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-gray-200 border border-wa-border">Anti-Eavesdrop</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-wa-hover text-wa-textSecondary border border-wa-border">Anti-Eavesdrop</span>
                 </div>
               </div>
             </div>
@@ -360,9 +384,9 @@ export default function AuthModal({ onAuthSuccess }) {
 
           {/* Quick Demo Profiles */}
           <div className="bg-wa-panel/80 p-4 rounded-xl border border-wa-border">
-            <p className="text-xs text-gray-200 mb-2.5 font-medium flex items-center justify-between">
-              <span className="font-semibold text-white">Quick Demo Profiles:</span>
-              <span className="text-[10px] text-gray-400 font-mono">1-Click Instant Login</span>
+            <p className="text-xs text-wa-textSecondary mb-2.5 font-medium flex items-center justify-between">
+              <span className="font-semibold text-wa-textPrimary">Quick Demo Profiles:</span>
+              <span className="text-[10px] text-wa-textSecondary font-mono">1-Click Instant Login</span>
             </p>
             <div className="grid grid-cols-2 gap-2.5">
               <button
@@ -394,7 +418,7 @@ export default function AuthModal({ onAuthSuccess }) {
                   <button
                     type="button"
                     onClick={() => { setViewMode('auth'); setError(''); setSuccessMsg(''); }}
-                    className="text-xs text-wa-textSecondary hover:text-white flex items-center gap-1.5 mb-6 transition"
+                    className="text-xs text-wa-textSecondary hover:text-wa-textPrimary flex items-center gap-1.5 mb-6 transition"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
                   </button>
@@ -403,7 +427,7 @@ export default function AuthModal({ onAuthSuccess }) {
                     <div className="w-10 h-10 rounded-full bg-wa-green/20 text-wa-green flex items-center justify-center mb-3">
                       <KeyRound className="w-5 h-5" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-1">Forgot Password</h2>
+                    <h2 className="text-xl font-bold text-wa-textPrimary mb-1">Forgot Password</h2>
                     <p className="text-xs text-wa-textSecondary leading-relaxed">
                       Enter your registered email address. We'll send a 6-digit quantum security code to verify your identity.
                     </p>
@@ -426,7 +450,7 @@ export default function AuthModal({ onAuthSuccess }) {
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
                         placeholder="your-email@domain.com"
-                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
+                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
                       />
                     </div>
 
@@ -458,7 +482,7 @@ export default function AuthModal({ onAuthSuccess }) {
                     <button
                       type="button"
                       onClick={() => { setViewMode('forgot_request'); setError(''); }}
-                      className="text-xs text-wa-textSecondary hover:text-white flex items-center gap-1.5 transition"
+                      className="text-xs text-wa-textSecondary hover:text-wa-textPrimary flex items-center gap-1.5 transition"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" /> Change Email
                     </button>
@@ -471,9 +495,9 @@ export default function AuthModal({ onAuthSuccess }) {
                     <div className="w-10 h-10 rounded-full bg-quantum-cyan/20 text-quantum-cyan flex items-center justify-center mb-3">
                       <Mail className="w-5 h-5" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-1">Enter Verification Code</h2>
+                    <h2 className="text-xl font-bold text-wa-textPrimary mb-1">Enter Verification Code</h2>
                     <p className="text-xs text-wa-textSecondary leading-relaxed">
-                      We sent a 6-digit code to <span className="text-white font-semibold">{forgotEmail}</span>. Enter the code and your new password below.
+                      We sent a 6-digit code to <span className="text-wa-textPrimary font-semibold">{forgotEmail}</span>. Enter the code and your new password below.
                     </p>
                   </div>
 
@@ -560,12 +584,12 @@ export default function AuthModal({ onAuthSuccess }) {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="••••••••••••"
-                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green pr-9"
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green pr-9"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2.5 top-2.5 text-wa-textSecondary hover:text-white"
+                          className="absolute right-2.5 top-2.5 text-wa-textSecondary hover:text-wa-textPrimary"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -582,7 +606,7 @@ export default function AuthModal({ onAuthSuccess }) {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
+                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
                       />
                     </div>
 
@@ -661,7 +685,7 @@ export default function AuthModal({ onAuthSuccess }) {
                   className={`pb-3 px-4 text-sm font-semibold border-b-2 transition ${
                     activeTab === 'credentials'
                       ? 'border-wa-green text-wa-green'
-                      : 'border-transparent text-wa-textSecondary hover:text-white'
+                      : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
                   }`}
                 >
                   Email & Password
@@ -671,7 +695,7 @@ export default function AuthModal({ onAuthSuccess }) {
                   className={`pb-3 px-4 text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
                     activeTab === 'qr'
                       ? 'border-wa-green text-wa-green'
-                      : 'border-transparent text-wa-textSecondary hover:text-white'
+                      : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
                   }`}
                 >
                   <Smartphone className="w-4 h-4" /> Link via QR
@@ -681,7 +705,7 @@ export default function AuthModal({ onAuthSuccess }) {
               {activeTab === 'credentials' ? (
                 <div>
                   <div className="mb-6">
-                    <h2 className="text-xl font-bold text-white mb-1">
+                    <h2 className="text-xl font-bold text-wa-textPrimary mb-1">
                       {isLogin ? 'Sign in to QChat Web' : 'Create Quantum Identity'}
                     </h2>
                     <p className="text-xs text-wa-textSecondary">
@@ -711,7 +735,7 @@ export default function AuthModal({ onAuthSuccess }) {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           placeholder="Dr. Alice Quantum"
-                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
                         />
                       </div>
                     )}
@@ -724,7 +748,7 @@ export default function AuthModal({ onAuthSuccess }) {
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="alice@qchat.quantum"
-                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
+                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
                       />
                     </div>
 
@@ -752,7 +776,7 @@ export default function AuthModal({ onAuthSuccess }) {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder="••••••••••••"
-                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-white placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
+                        className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2.5 text-sm text-wa-textPrimary placeholder-wa-textSecondary/50 focus:outline-none focus:border-wa-green"
                       />
                     </div>
 
@@ -783,9 +807,9 @@ export default function AuthModal({ onAuthSuccess }) {
                     <div className="w-8 h-8 rounded-full bg-wa-green/20 text-wa-green flex items-center justify-center">
                       <Smartphone className="w-4 h-4" />
                     </div>
-                    <h2 className="text-lg font-bold text-white">Log in with QR Code</h2>
+                    <h2 className="text-lg font-bold text-wa-textPrimary">Log in with QR Code</h2>
                   </div>
-                  <p className="text-xs text-gray-300 mb-3 max-w-sm leading-relaxed">
+                  <p className="text-xs text-wa-textSecondary mb-3 max-w-sm leading-relaxed">
                     Scan with your mobile camera or use instant 1-click test pairing below to log into your quantum encrypted session.
                   </p>
 
@@ -868,7 +892,7 @@ export default function AuthModal({ onAuthSuccess }) {
 
                   {/* 1-Click Instant QR Login Simulator */}
                   <div className="w-full max-w-sm p-3 rounded-xl bg-wa-panel/80 border border-wa-border text-left mb-3">
-                    <p className="text-[11px] font-semibold text-white mb-2 flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-wa-textPrimary mb-2 flex items-center justify-between">
                       <span>⚡ Instant 1-Click QR Login (Test Handshake):</span>
                       <span className="text-[10px] text-wa-green font-mono">Simulate Scan</span>
                     </p>
@@ -897,7 +921,7 @@ export default function AuthModal({ onAuthSuccess }) {
                     <button
                       type="button"
                       onClick={() => setShowQrCredentials(!showQrCredentials)}
-                      className="text-xs text-gray-400 hover:text-white underline mb-2 transition block"
+                      className="text-xs text-wa-textSecondary hover:text-wa-textPrimary underline mb-2 transition block"
                     >
                       {showQrCredentials ? '▲ Hide manual credentials' : '▼ Or authorize this QR session with an existing account'}
                     </button>
@@ -910,7 +934,7 @@ export default function AuthModal({ onAuthSuccess }) {
                           placeholder="your-email@domain.com"
                           value={qrManualEmail}
                           onChange={(e) => setQrManualEmail(e.target.value)}
-                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-wa-green"
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-wa-textPrimary focus:outline-none focus:border-wa-green"
                         />
                         <input
                           type="password"
@@ -918,7 +942,7 @@ export default function AuthModal({ onAuthSuccess }) {
                           placeholder="Password"
                           value={qrManualPassword}
                           onChange={(e) => setQrManualPassword(e.target.value)}
-                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-wa-green"
+                          className="w-full bg-wa-bg border border-wa-border rounded px-3 py-1.5 text-xs text-wa-textPrimary focus:outline-none focus:border-wa-green"
                         />
                         <button
                           type="submit"

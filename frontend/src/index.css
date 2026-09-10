@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+:root,
+html.dark {
+  --wa-bg: 17 27 33;              /* #111b21 */
+  --wa-panel: 32 44 51;           /* #202c33 */
+  --wa-surface: 34 46 53;         /* #222e35 */
+  --wa-hover: 42 57 66;           /* #2a3942 */
+  --wa-active: 42 57 66;          /* #2a3942 */
+  --wa-outgoing: 0 92 75;         /* #005c4b */
+  --wa-incoming: 32 44 51;        /* #202c33 */
+  --wa-text-primary: 233 237 239; /* #e9edef */
+  --wa-text-secondary: 134 150 160; /* #8696a0 */
+  --wa-border: 34 45 52;          /* #222d34 */
+  --wa-chat-bg: #0b141a;
+  --wa-chat-dot: #182229;
+  --wa-scrollbar-thumb: rgba(134, 150, 160, 0.2);
+  --wa-scrollbar-hover: rgba(134, 150, 160, 0.4);
+}
+
+html.light {
+  --wa-bg: 240 242 245;           /* #f0f2f5 */
+  --wa-panel: 255 255 255;        /* #ffffff */
+  --wa-surface: 240 242 245;      /* #f0f2f5 */
+  --wa-hover: 245 246 248;        /* #f5f6f8 */
+  --wa-active: 235 237 240;       /* #ebedf0 */
+  --wa-outgoing: 217 253 211;     /* #d9fdd3 */
+  --wa-incoming: 255 255 255;     /* #ffffff */
+  --wa-text-primary: 17 27 33;    /* #111b21 */
+  --wa-text-secondary: 102 119 129; /* #667781 */
+  --wa-border: 233 237 239;       /* #e9edef */
+  --wa-chat-bg: #efeae2;
+  --wa-chat-dot: #d1d7db;
+  --wa-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --wa-scrollbar-hover: rgba(0, 0, 0, 0.3);
+}
+
 @layer base {
   html,
   body,
@@ -13,6 +48,7 @@
     padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -27,18 +63,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(134, 150, 160, 0.2);
+  background: var(--wa-scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(134, 150, 160, 0.4);
+  background: var(--wa-scrollbar-hover);
 }
 
 /* WhatsApp chat background doodle pattern overlay */
 .wa-chat-bg {
-  background-color: #0b141a;
-  background-image: radial-gradient(#182229 1px, transparent 1px);
+  background-color: var(--wa-chat-bg);
+  background-image: radial-gradient(var(--wa-chat-dot) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 

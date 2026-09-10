@@ -411,7 +411,7 @@ export default function App() {
           <div className="w-24 h-24 rounded-full bg-wa-panel border border-wa-border flex items-center justify-center text-quantum-cyan mb-4 shadow-xl">
             <AlertTriangle className="w-12 h-12 text-wa-green" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">QChat Web for Desktop</h2>
+          <h2 className="text-2xl font-bold text-wa-textPrimary mb-2">QChat Web for Desktop</h2>
           <p className="text-xs text-wa-textSecondary max-w-sm leading-relaxed mb-6">
             Send and receive quantum-signed messages without keeping your phone online. Secured with Simulated Teleportation QDS and Dynamic E91 Bell Entanglement.
           </p>
