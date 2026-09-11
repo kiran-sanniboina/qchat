@@ -322,7 +322,7 @@ export default function Sidebar({
               className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-wa-green text-black shadow-sm'
-                  : 'bg-wa-surface text-wa-textSecondary hover:text-white hover:bg-wa-hover border border-wa-border'
+                  : 'bg-wa-surface text-wa-textSecondary hover:text-wa-textPrimary hover:bg-wa-hover border border-wa-border'
               }`}
             >
               <span>{tab.label}</span>
@@ -558,7 +558,7 @@ export default function Sidebar({
         <button
           type="button"
           onClick={onOpenNewChatModal}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition"
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-wa-textPrimary transition"
           title="Start New Chat"
         >
           <div className="w-9 h-9 rounded-full bg-wa-green hover:bg-wa-greenHover text-white flex items-center justify-center shadow-lg -mt-4 border-2 border-wa-surface transition active:scale-95">
@@ -571,7 +571,7 @@ export default function Sidebar({
         <button
           type="button"
           onClick={onOpenUserProfile}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition group"
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-wa-textPrimary transition group"
           title="Open Profile Settings"
         >
           <div className="relative">
@@ -583,14 +583,14 @@ export default function Sidebar({
             />
             <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-wa-green ring-1 ring-wa-surface" />
           </div>
-          <span className="text-[10px] font-medium mt-0.5 text-white">Profile</span>
+          <span className="text-[10px] font-medium mt-0.5 text-wa-textPrimary">Profile</span>
         </button>
 
         {/* More Settings Menu */}
         <button
           type="button"
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-white transition"
+          className="flex flex-col items-center justify-center flex-1 py-1 text-wa-textSecondary hover:text-wa-textPrimary transition"
           title="More Settings"
         >
           <Settings className="w-5 h-5" />
@@ -602,7 +602,7 @@ export default function Sidebar({
       {muteModalChat && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-wa-surface border border-wa-border max-w-xs w-full rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center space-x-2 text-white font-bold text-sm">
+            <div className="flex items-center space-x-2 text-wa-textPrimary font-bold text-sm">
               <BellOff className="w-5 h-5 text-quantum-cyan" />
               <span>Mute notifications for {muteModalChat.name || 'this chat'}?</span>
             </div>
@@ -619,7 +619,7 @@ export default function Sidebar({
                   key={opt.value}
                   type="button"
                   onClick={() => handleToggleMute(muteModalChat._id, opt.value)}
-                  className="w-full text-left px-3 py-2 rounded-lg bg-wa-panel hover:bg-wa-hover text-white text-xs font-medium border border-wa-border transition"
+                  className="w-full text-left px-3 py-2 rounded-lg bg-wa-panel hover:bg-wa-hover text-wa-textPrimary text-xs font-medium border border-wa-border transition"
                 >
                   {opt.label}
                 </button>
@@ -629,7 +629,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => setMuteModalChat(null)}
-                className="px-3 py-1.5 bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-lg text-xs"
+                className="px-3 py-1.5 bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-lg text-xs border border-wa-border transition"
               >
                 Cancel
               </button>

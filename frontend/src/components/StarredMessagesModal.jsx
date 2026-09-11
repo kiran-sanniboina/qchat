@@ -53,14 +53,14 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
               <Star className="w-4 h-4 fill-amber-400" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white leading-tight">Starred Messages</h3>
+              <h3 className="text-sm font-bold text-wa-textPrimary leading-tight">Starred Messages</h3>
               <p className="text-[11px] text-wa-textSecondary">{messages.length} saved messages</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -75,13 +75,13 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search starred messages..."
-              className="w-full bg-transparent text-white placeholder-wa-textSecondary focus:outline-none text-xs"
+              className="w-full bg-transparent text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none text-xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="text-wa-textSecondary hover:text-white"
+                className="text-wa-textSecondary hover:text-wa-textPrimary"
               >
                 &times;
               </button>
@@ -94,12 +94,12 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center text-wa-textSecondary space-y-2">
               <Loader2 className="w-8 h-8 text-quantum-cyan animate-spin" />
-              <p className="text-white font-medium">Fetching starred messages...</p>
+              <p className="text-wa-textPrimary font-medium">Fetching starred messages...</p>
             </div>
           ) : filteredMessages.length === 0 ? (
             <div className="py-12 text-center text-wa-textSecondary bg-wa-panel/40 rounded-xl border border-wa-border">
               <Star className="w-8 h-8 text-amber-400/40 mx-auto mb-2" />
-              <p className="text-white font-medium">No starred messages found</p>
+              <p className="text-wa-textPrimary font-medium">No starred messages found</p>
               <p className="text-[11px] text-wa-textSecondary mt-1">
                 Hover over any message and click the star ⭐ to save it here.
               </p>
@@ -127,7 +127,7 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
                         alt={sender}
                         className="w-6 h-6 rounded-full object-cover bg-wa-bg border border-wa-border shrink-0"
                       />
-                      <span className="font-semibold text-white truncate">{sender}</span>
+                      <span className="font-semibold text-wa-textPrimary truncate">{sender}</span>
                       <span className="text-[10px] text-quantum-cyan bg-quantum-cyan/10 px-1.5 py-0.2 rounded border border-quantum-cyan/20 truncate">
                         {chatName}
                       </span>
@@ -149,7 +149,7 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
                   </div>
 
                   {/* Content Preview */}
-                  <div className="text-white text-xs pl-8 break-words leading-relaxed">
+                  <div className="text-wa-textPrimary text-xs pl-8 break-words leading-relaxed">
                     {msg.plaintextPreview}
                   </div>
 
@@ -168,7 +168,7 @@ export default function StarredMessagesModal({ onSelectChat, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-wa-surface hover:bg-wa-hover text-white text-xs font-semibold rounded-lg border border-wa-border transition"
+            className="px-4 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textPrimary text-xs font-semibold rounded-lg border border-wa-border transition"
           >
             Close
           </button>

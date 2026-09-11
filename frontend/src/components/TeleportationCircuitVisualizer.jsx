@@ -49,7 +49,7 @@ function BlochSphere3D({
   return (
     <div className="flex flex-col items-center bg-wa-bg p-3 rounded-xl border border-wa-border relative overflow-hidden shadow-inner w-full max-w-[210px]">
       <div className="text-center mb-1">
-        <span className="text-[11px] font-bold text-white block truncate">{title}</span>
+        <span className="text-[11px] font-bold text-wa-textPrimary block truncate">{title}</span>
         <span className="text-[9px] text-wa-textSecondary block truncate">{subtitle}</span>
       </div>
 
@@ -381,7 +381,7 @@ export default function TeleportationCircuitVisualizer({
         <div>
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-quantum-cyan animate-pulse" />
-            <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+            <h3 className="text-sm font-bold text-wa-textPrimary tracking-wide flex items-center gap-2">
               Quantum Teleportation Circuit Visualizer & Bloch Sphere Engine
             </h3>
           </div>
@@ -409,7 +409,7 @@ export default function TeleportationCircuitVisualizer({
       {/* State Selector Bar & Custom Angle Slider */}
       <div className="bg-wa-panel/80 p-3 rounded-xl border border-wa-border space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-white font-semibold flex items-center gap-1.5 text-xs">
+          <span className="text-wa-textPrimary font-semibold flex items-center gap-1.5 text-xs">
             <Sparkles className="w-3.5 h-3.5 text-quantum-cyan" /> Choose Input State |ψ⟩ to Teleport:
           </span>
 
@@ -425,7 +425,7 @@ export default function TeleportationCircuitVisualizer({
                 className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 ${
                   !isCustomAngle && activeState === s.id
                     ? 'bg-quantum-cyan/20 text-quantum-cyan border border-quantum-cyan shadow-[0_0_10px_rgba(0,242,254,0.3)]'
-                    : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-white'
+                    : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-wa-textPrimary'
                 }`}
                 title={s.desc}
               >
@@ -439,7 +439,7 @@ export default function TeleportationCircuitVisualizer({
               className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1 ${
                 isCustomAngle
                   ? 'bg-quantum-purple/20 text-quantum-purple border border-quantum-purple shadow-[0_0_10px_rgba(168,85,247,0.3)]'
-                  : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-white'
+                  : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-wa-textPrimary'
               }`}
             >
               <Sliders className="w-3 h-3" />
@@ -473,7 +473,7 @@ export default function TeleportationCircuitVisualizer({
       {messageRecords.length > 0 && (
         <div className="bg-wa-panel/60 p-2.5 rounded-xl border border-wa-border space-y-1.5">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-white flex items-center gap-1.5">
+            <span className="font-semibold text-wa-textPrimary flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-wa-green" /> Inspect Qubits from Active Message Signature:
             </span>
             <span className="text-wa-textSecondary font-mono">Qubit #{selectedQubitIndex} of 32</span>
@@ -490,7 +490,7 @@ export default function TeleportationCircuitVisualizer({
                 className={`px-2 py-1 rounded text-[10px] font-mono shrink-0 transition ${
                   selectedQubitIndex === idx && !isCustomAngle
                     ? 'bg-wa-green text-white font-bold shadow'
-                    : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-white'
+                    : 'bg-wa-surface border border-wa-border text-wa-textSecondary hover:text-wa-textPrimary'
                 }`}
               >
                 Q{idx}: {rec.inputState === '00' ? '|0⟩' : rec.inputState === '01' ? '|1⟩' : rec.inputState === '10' ? '|+⟩' : '|-⟩'}
@@ -576,7 +576,7 @@ export default function TeleportationCircuitVisualizer({
           </div>
 
           {/* State Formula */}
-          <div className="px-2.5 py-1 bg-wa-surface rounded-lg border border-wa-border font-mono text-[10px] text-white/90 truncate max-w-full">
+          <div className="px-2.5 py-1 bg-wa-surface rounded-lg border border-wa-border font-mono text-[10px] text-wa-textPrimary truncate max-w-full">
             {currentStateInfo.formula}
           </div>
         </div>
@@ -1194,7 +1194,7 @@ export default function TeleportationCircuitVisualizer({
           <button
             onClick={handleReset}
             title="Reset Simulation"
-            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-lg border border-wa-border transition"
+            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-lg border border-wa-border transition"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -1203,7 +1203,7 @@ export default function TeleportationCircuitVisualizer({
             onClick={handlePrev}
             disabled={currentStageIndex <= 0}
             title="Previous Step"
-            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-lg border border-wa-border transition disabled:opacity-30"
+            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-lg border border-wa-border transition disabled:opacity-30"
           >
             <SkipBack className="w-4 h-4" />
           </button>
@@ -1212,7 +1212,7 @@ export default function TeleportationCircuitVisualizer({
             onClick={handleNext}
             disabled={currentStageIndex >= stages.length - 1}
             title="Next Step"
-            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-lg border border-wa-border transition disabled:opacity-30"
+            className="p-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-lg border border-wa-border transition disabled:opacity-30"
           >
             <SkipForward className="w-4 h-4" />
           </button>
@@ -1226,7 +1226,7 @@ export default function TeleportationCircuitVisualizer({
             className={`px-2.5 py-1 rounded font-semibold transition ${
               speed === 2000
                 ? 'bg-quantum-cyan/20 text-quantum-cyan border border-quantum-cyan/40'
-                : 'bg-wa-surface text-wa-textSecondary hover:text-white'
+                : 'bg-wa-surface text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             Slow (2s)
@@ -1236,7 +1236,7 @@ export default function TeleportationCircuitVisualizer({
             className={`px-2.5 py-1 rounded font-semibold transition ${
               speed === 1200
                 ? 'bg-quantum-cyan/20 text-quantum-cyan border border-quantum-cyan/40'
-                : 'bg-wa-surface text-wa-textSecondary hover:text-white'
+                : 'bg-wa-surface text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             Normal (1.2s)
@@ -1246,7 +1246,7 @@ export default function TeleportationCircuitVisualizer({
             className={`px-2.5 py-1 rounded font-semibold transition ${
               speed === 600
                 ? 'bg-quantum-cyan/20 text-quantum-cyan border border-quantum-cyan/40'
-                : 'bg-wa-surface text-wa-textSecondary hover:text-white'
+                : 'bg-wa-surface text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             Fast (0.6s)
@@ -1262,10 +1262,10 @@ export default function TeleportationCircuitVisualizer({
             onClick={() => { setCurrentStageIndex(i); setIsPlaying(false); }}
             className={`p-2 rounded border text-center transition ${
               currentStageIndex === i
-                ? 'bg-wa-green/20 border-wa-green text-white font-bold shadow'
+                ? 'bg-wa-green/20 border-wa-green text-wa-green font-bold shadow'
                 : currentStageIndex > i
                 ? 'bg-wa-panel border-wa-green/40 text-wa-green'
-                : 'bg-wa-panel border-wa-border text-wa-textSecondary hover:text-white'
+                : 'bg-wa-panel border-wa-border text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <span className="block font-semibold">Stage {i + 1}</span>
@@ -1277,7 +1277,7 @@ export default function TeleportationCircuitVisualizer({
       {/* Current Stage Detailed Explanation Card */}
       <div className="p-4 bg-wa-panel rounded-xl border border-wa-border space-y-3 animate-in fade-in">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-white flex items-center gap-2">
+          <h4 className="text-xs font-bold text-wa-textPrimary flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-wa-green/20 border border-wa-green/50 text-wa-green flex items-center justify-center text-[10px]">
               {currentStageIndex + 1}
             </span>
@@ -1291,7 +1291,7 @@ export default function TeleportationCircuitVisualizer({
           )}
         </div>
 
-        <p className="text-xs text-white/90 leading-relaxed">
+        <p className="text-xs text-wa-textPrimary leading-relaxed">
           {currentStage.description}
         </p>
 
@@ -1305,11 +1305,11 @@ export default function TeleportationCircuitVisualizer({
         <div className="grid grid-cols-3 gap-2 font-mono text-[11px] pt-1">
           <div className="p-2 bg-wa-surface rounded border border-wa-border">
             <span className="text-[10px] text-wa-textSecondary block">q0 (Alice's QDS)</span>
-            <span className="font-bold text-white">{currentStage.qubitStates?.q0}</span>
+            <span className="font-bold text-wa-textPrimary">{currentStage.qubitStates?.q0}</span>
           </div>
           <div className="p-2 bg-wa-surface rounded border border-wa-border">
             <span className="text-[10px] text-wa-textSecondary block">q1 (Alice's Bell)</span>
-            <span className="font-bold text-white">{currentStage.qubitStates?.q1}</span>
+            <span className="font-bold text-wa-textPrimary">{currentStage.qubitStates?.q1}</span>
           </div>
           <div className="p-2 bg-wa-surface rounded border border-wa-border">
             <span className="text-[10px] text-wa-textSecondary block">q2 (Bob's Reconstructed)</span>
@@ -1321,7 +1321,7 @@ export default function TeleportationCircuitVisualizer({
       {/* Pauli Correction Lookup Table Explanation */}
       <div className="p-3.5 bg-wa-panel/60 rounded-xl border border-wa-border">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-white flex items-center gap-1.5">
+          <span className="text-xs font-bold text-wa-textPrimary flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-quantum-cyan" /> Deterministic Pauli Correction Rule Table (Section 5.3):
           </span>
           <span className="text-[10px] text-wa-textSecondary">Standard Quantum Teleportation Protocol</span>
@@ -1338,12 +1338,12 @@ export default function TeleportationCircuitVisualizer({
               key={row.outcome}
               className={`p-2 rounded border transition ${
                 simulationData?.classicalBits === row.outcome
-                  ? 'bg-quantum-cyan/20 border-quantum-cyan text-white font-bold shadow-[0_0_10px_rgba(0,242,254,0.3)]'
+                  ? 'bg-quantum-cyan/20 border-quantum-cyan text-quantum-cyan font-bold shadow-[0_0_10px_rgba(0,242,254,0.3)]'
                   : 'bg-wa-surface border-wa-border text-wa-textSecondary'
               }`}
             >
               <div className="text-amber-400 font-bold">{row.outcome}</div>
-              <div className="text-white my-0.5">{row.gate}</div>
+              <div className="text-wa-textPrimary my-0.5">{row.gate}</div>
               <div className="text-[9px] text-wa-textSecondary">{row.desc}</div>
             </div>
           ))}

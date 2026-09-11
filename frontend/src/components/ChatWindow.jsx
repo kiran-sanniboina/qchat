@@ -156,7 +156,7 @@ function LightboxModal({ url, filename, onClose }) {
           download={filename || 'image'}
           target="_blank"
           rel="noreferrer"
-          className="p-2.5 bg-wa-panel hover:bg-wa-hover text-white rounded-full transition shadow"
+          className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition shadow"
           title="Download full size"
         >
           <Download className="w-5 h-5" />
@@ -164,7 +164,7 @@ function LightboxModal({ url, filename, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="p-2.5 bg-wa-panel hover:bg-wa-hover text-white rounded-full transition shadow"
+          className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition shadow"
         >
           <X className="w-5 h-5" />
         </button>
@@ -657,7 +657,7 @@ export default function ChatWindow({
     >
       {/* Real-time Toast Confirmation */}
       {toastMsg && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-wa-panel border border-wa-border text-white text-xs rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-wa-panel border border-wa-border text-wa-textPrimary text-xs rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 className="w-4 h-4 text-wa-green" />
           <span>{toastMsg}</span>
         </div>
@@ -672,9 +672,9 @@ export default function ChatWindow({
               type="button"
               onClick={onBack}
               title="Back to Chats"
-              className="md:hidden p-2 -ml-1 mr-0.5 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition shrink-0"
+              className="md:hidden p-2 -ml-1 mr-0.5 text-wa-textSecondary hover:text-wa-textPrimary rounded-full hover:bg-wa-hover transition shrink-0"
             >
-              <ArrowLeft className="w-5 h-5 text-wa-textSecondary hover:text-white" />
+              <ArrowLeft className="w-5 h-5 text-wa-textSecondary hover:text-wa-textPrimary" />
             </button>
           )}
 
@@ -886,7 +886,7 @@ export default function ChatWindow({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-white text-[11px] font-medium shrink-0 border border-wa-border transition"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-wa-panel hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary text-[11px] font-medium shrink-0 border border-wa-border transition"
             title="All Chats"
           >
             <ArrowLeft className="w-3 h-3" />
@@ -920,8 +920,8 @@ export default function ChatWindow({
                   onClick={() => onSelectChat && onSelectChat(chat)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0 transition text-left ${
                     isCurrent
-                      ? 'bg-wa-green/20 border border-wa-green/70 text-white shadow-sm ring-1 ring-wa-green/40'
-                      : 'bg-wa-panel/80 hover:bg-wa-panel border border-wa-border/60 text-wa-textSecondary hover:text-white'
+                      ? 'bg-wa-green/20 border border-wa-green/70 text-wa-textPrimary shadow-sm ring-1 ring-wa-green/40 font-medium'
+                      : 'bg-wa-panel/80 hover:bg-wa-panel border border-wa-border/60 text-wa-textSecondary hover:text-wa-textPrimary'
                   }`}
                   title={`Switch to ${name}`}
                 >
@@ -1010,7 +1010,7 @@ export default function ChatWindow({
                 <button
                   type="button"
                   onClick={() => handleStartReply(msg)}
-                  className="p-1 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition"
+                  className="p-1 text-wa-textSecondary hover:text-wa-textPrimary rounded-full hover:bg-wa-hover transition"
                   title="Reply"
                 >
                   <CornerUpLeft className="w-3.5 h-3.5" />
@@ -1020,7 +1020,7 @@ export default function ChatWindow({
                 <button
                   type="button"
                   onClick={() => handleToggleStar(msg._id)}
-                  className={`p-1 rounded-full hover:bg-wa-hover transition ${isStarred ? 'text-amber-400' : 'text-wa-textSecondary hover:text-white'}`}
+                  className={`p-1 rounded-full hover:bg-wa-hover transition ${isStarred ? 'text-amber-400' : 'text-wa-textSecondary hover:text-wa-textPrimary'}`}
                   title={isStarred ? 'Unstar' : 'Star message'}
                 >
                   <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-400' : ''}`} />
@@ -1031,7 +1031,7 @@ export default function ChatWindow({
                   <button
                     type="button"
                     onClick={() => setActiveBubbleMenuId(isMenuOpen ? null : msg._id)}
-                    className="p-1 text-wa-textSecondary hover:text-white rounded-full hover:bg-wa-hover transition"
+                    className="p-1 text-wa-textSecondary hover:text-wa-textPrimary rounded-full hover:bg-wa-hover transition"
                     title="More actions"
                   >
                     <ChevronDown className="w-3.5 h-3.5" />
@@ -1039,7 +1039,7 @@ export default function ChatWindow({
 
                   {/* Bubble Menu Popup */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 top-7 w-36 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-white animate-in fade-in zoom-in-95">
+                    <div className="absolute right-0 top-7 w-36 bg-wa-surface border border-wa-border rounded-xl shadow-2xl py-1 z-50 text-xs text-wa-textPrimary animate-in fade-in zoom-in-95">
                       <button
                         type="button"
                         onClick={() => handleStartReply(msg)}
@@ -1202,13 +1202,13 @@ export default function ChatWindow({
                       href={fullUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2.5 p-2.5 bg-black/25 rounded-xl border border-white/10 hover:bg-black/35 transition my-1"
+                      className="flex items-center gap-2.5 p-2.5 bg-black/10 dark:bg-black/25 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/15 dark:hover:bg-black/35 transition my-1"
                     >
                       <div className="w-9 h-9 rounded-lg bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan shrink-0">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="font-semibold text-white block truncate text-xs">
+                        <span className="font-semibold text-wa-textPrimary block truncate text-xs">
                           {msg.mediaFilename || 'Download Document'}
                         </span>
                         {msg.fileSize > 0 && (
@@ -1224,13 +1224,13 @@ export default function ChatWindow({
 
                 {/* Rich Media: Location */}
                 {msg.mediaType === 'location' && msg.locationData && (
-                  <div className="rounded-xl overflow-hidden bg-black/25 border border-white/10 p-3 my-1 space-y-2">
+                  <div className="rounded-xl overflow-hidden bg-black/5 dark:bg-black/25 border border-black/10 dark:border-white/10 p-3 my-1 space-y-2">
                     <div className="flex items-start space-x-2">
                       <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 shrink-0">
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-white block text-xs truncate">
+                        <span className="font-bold text-wa-textPrimary block text-xs truncate">
                           {msg.locationData.name || 'Shared Location'}
                         </span>
                         <span className="text-[11px] text-wa-textSecondary block mt-0.5 truncate">
@@ -1252,7 +1252,7 @@ export default function ChatWindow({
 
                 {/* Rich Media: Contact Card */}
                 {msg.mediaType === 'contact' && msg.contactData && (
-                  <div className="rounded-xl overflow-hidden bg-black/25 border border-white/10 p-3 my-1 space-y-2.5">
+                  <div className="rounded-xl overflow-hidden bg-black/5 dark:bg-black/25 border border-black/10 dark:border-white/10 p-3 my-1 space-y-2.5">
                     <div className="flex items-center space-x-3">
                       <img
                         src={getResolvedAvatar(msg.contactData.avatarUrl, msg.contactData.email || msg.contactData.name, msg.contactData.name)}
@@ -1260,7 +1260,7 @@ export default function ChatWindow({
                         className="w-10 h-10 rounded-full object-cover bg-wa-surface border border-wa-border shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-white block text-xs truncate">
+                        <span className="font-bold text-wa-textPrimary block text-xs truncate">
                           {msg.contactData.name}
                         </span>
                         {msg.contactData.phone && (
@@ -1366,8 +1366,8 @@ export default function ChatWindow({
                         onClick={() => handleReact(msg._id, emoji)}
                         className={`px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 border transition shadow-sm ${
                           userReacted
-                            ? 'bg-quantum-cyan/20 border-quantum-cyan/50 text-white'
-                            : 'bg-wa-surface border-wa-border text-wa-textSecondary hover:text-white'
+                            ? 'bg-quantum-cyan/20 border-quantum-cyan/50 text-wa-textPrimary'
+                            : 'bg-wa-surface border-wa-border text-wa-textSecondary hover:text-wa-textPrimary'
                         }`}
                         title={`${count} reactions. Click to toggle.`}
                       >
@@ -1394,7 +1394,7 @@ export default function ChatWindow({
             </span>
             <button
               onClick={() => setShowAttackPicker(false)}
-              className="text-xs text-wa-textSecondary hover:text-white shrink-0"
+              className="text-xs text-wa-textSecondary hover:text-wa-textPrimary shrink-0"
             >
               Close
             </button>
@@ -1460,7 +1460,7 @@ export default function ChatWindow({
           <button
             type="button"
             onClick={() => setReplyingTo(null)}
-            className="p-1 text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1 text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1534,7 +1534,7 @@ export default function ChatWindow({
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             title="Emojis & Stickers"
             className={`p-2 rounded-full transition shrink-0 ${
-              showEmojiPicker ? 'text-wa-green bg-wa-hover' : 'text-wa-textSecondary hover:text-white hover:bg-wa-hover'
+              showEmojiPicker ? 'text-wa-green bg-wa-hover' : 'text-wa-textSecondary hover:text-wa-textPrimary hover:bg-wa-hover'
             }`}
           >
             <Smile className="w-5 h-5" />
@@ -1548,7 +1548,7 @@ export default function ChatWindow({
               disabled={uploading}
               title="Attach media, location, contact, document"
               className={`p-2 rounded-full transition shrink-0 ${
-                showAttachMenu ? 'text-quantum-cyan bg-wa-hover' : 'text-wa-textSecondary hover:text-white hover:bg-wa-hover'
+                showAttachMenu ? 'text-quantum-cyan bg-wa-hover' : 'text-wa-textSecondary hover:text-wa-textPrimary hover:bg-wa-hover'
               }`}
             >
               <Paperclip className="w-5 h-5" />
@@ -1564,7 +1564,7 @@ export default function ChatWindow({
                     setShowAttachMenu(false);
                     fileInputRef.current?.click();
                   }}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-wa-textPrimary transition"
                 >
                   <div className="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center">
                     <ImageIcon className="w-4 h-4" />
@@ -1579,7 +1579,7 @@ export default function ChatWindow({
                     setShowAttachMenu(false);
                     docInputRef.current?.click();
                   }}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-wa-textPrimary transition"
                 >
                   <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
                     <FileText className="w-4 h-4" />
@@ -1594,7 +1594,7 @@ export default function ChatWindow({
                     setShowAttachMenu(false);
                     setShowLocationModal(true);
                   }}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-wa-textPrimary transition"
                 >
                   <div className="w-7 h-7 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
                     <MapPin className="w-4 h-4" />
@@ -1609,7 +1609,7 @@ export default function ChatWindow({
                     setShowAttachMenu(false);
                     setShowContactModal(true);
                   }}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-white transition"
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-xs rounded-xl hover:bg-wa-hover text-wa-textPrimary transition"
                 >
                   <div className="w-7 h-7 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center">
                     <User className="w-4 h-4" />
@@ -1738,7 +1738,7 @@ export default function ChatWindow({
               <Trash2 className="w-5 h-5" />
             </div>
             <div className="text-center space-y-1">
-              <h4 className="font-bold text-white text-sm">Delete message?</h4>
+              <h4 className="font-bold text-wa-textPrimary text-sm">Delete message?</h4>
               <p className="text-xs text-wa-textSecondary">
                 Choose whether to delete this message for everyone or only for yourself.
               </p>
@@ -1756,14 +1756,14 @@ export default function ChatWindow({
               <button
                 type="button"
                 onClick={() => handleDeleteMessage(false)}
-                className="w-full py-2 bg-wa-panel hover:bg-wa-hover text-white rounded-xl text-xs font-semibold border border-wa-border transition"
+                className="w-full py-2 bg-wa-panel hover:bg-wa-hover text-wa-textPrimary rounded-xl text-xs font-semibold border border-wa-border transition"
               >
                 Delete for me
               </button>
               <button
                 type="button"
                 onClick={() => setDeleteModalData(null)}
-                className="w-full py-2 text-wa-textSecondary hover:text-white rounded-xl text-xs transition"
+                className="w-full py-2 text-wa-textSecondary hover:text-wa-textPrimary rounded-xl text-xs transition"
               >
                 Cancel
               </button>
@@ -1780,7 +1780,7 @@ export default function ChatWindow({
               <Trash2 className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1.5">
-              <h3 className="text-base font-bold text-white">Clear this chat?</h3>
+              <h3 className="text-base font-bold text-wa-textPrimary">Clear this chat?</h3>
               <p className="text-xs text-wa-textSecondary leading-relaxed">
                 Messages will be removed for your account. This will not affect other participants in this chat.
               </p>
@@ -1790,7 +1790,7 @@ export default function ChatWindow({
                 type="button"
                 onClick={() => setShowClearModal(false)}
                 disabled={clearing}
-                className="px-4 py-2 bg-wa-panel hover:bg-wa-hover text-white text-xs font-semibold rounded-lg transition border border-wa-border"
+                className="px-4 py-2 bg-wa-panel hover:bg-wa-hover text-wa-textPrimary text-xs font-semibold rounded-lg transition border border-wa-border"
               >
                 Cancel
               </button>
@@ -1827,7 +1827,7 @@ export default function ChatWindow({
                   <ArrowLeftRight className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Switch Conversation</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary">Switch Conversation</h3>
                   <p className="text-[11px] text-wa-textSecondary">
                     {chats?.length || 0} active {chats?.length === 1 ? 'chat' : 'chats'}
                   </p>
@@ -1836,7 +1836,7 @@ export default function ChatWindow({
               <button
                 type="button"
                 onClick={() => setShowQuickSwitcher(false)}
-                className="p-1.5 rounded-full hover:bg-wa-hover text-wa-textSecondary hover:text-white transition"
+                className="p-1.5 rounded-full hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1851,14 +1851,14 @@ export default function ChatWindow({
                   value={quickSwitcherSearch}
                   onChange={(e) => setQuickSwitcherSearch(e.target.value)}
                   placeholder="Filter conversations..."
-                  className="w-full bg-transparent text-xs text-white placeholder-wa-textSecondary focus:outline-none"
+                  className="w-full bg-transparent text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none"
                   autoFocus
                 />
                 {quickSwitcherSearch && (
                   <button
                     type="button"
                     onClick={() => setQuickSwitcherSearch('')}
-                    className="p-1 text-wa-textSecondary hover:text-white"
+                    className="p-1 text-wa-textSecondary hover:text-wa-textPrimary"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1916,7 +1916,7 @@ export default function ChatWindow({
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <h4 className={`text-xs font-semibold truncate pr-2 ${isCurrent ? 'text-wa-green' : 'text-white'}`}>
+                          <h4 className={`text-xs font-semibold truncate pr-2 ${isCurrent ? 'text-wa-green' : 'text-wa-textPrimary'}`}>
                             {name}
                           </h4>
                           {isCurrent && (
@@ -1947,7 +1947,7 @@ export default function ChatWindow({
                   setShowQuickSwitcher(false);
                   if (onBack) onBack();
                 }}
-                className="flex-1 py-2 bg-wa-panel hover:bg-wa-hover border border-wa-border text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 bg-wa-panel hover:bg-wa-hover border border-wa-border text-wa-textPrimary text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> All Chats
               </button>
@@ -1958,7 +1958,7 @@ export default function ChatWindow({
                     setShowQuickSwitcher(false);
                     onOpenUserProfile();
                   }}
-                  className="py-2 px-3 bg-wa-panel hover:bg-wa-hover border border-wa-border text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
+                  className="py-2 px-3 bg-wa-panel hover:bg-wa-hover border border-wa-border text-wa-textPrimary text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5"
                   title="Open My Profile Settings"
                 >
                   <User className="w-3.5 h-3.5 text-wa-green" /> Profile

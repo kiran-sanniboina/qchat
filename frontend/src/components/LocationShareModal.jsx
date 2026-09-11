@@ -70,12 +70,12 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
             <div className="w-8 h-8 rounded-full bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan">
               <MapPin className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Share Location</h3>
+            <h3 className="text-sm font-bold text-wa-textPrimary">Share Location</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,7 +86,7 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
           {loading ? (
             <div className="py-8 flex flex-col items-center justify-center text-wa-textSecondary space-y-2">
               <Loader2 className="w-7 h-7 text-quantum-cyan animate-spin" />
-              <p className="text-white font-medium">Acquiring GPS coordinates...</p>
+              <p className="text-wa-textPrimary font-medium">Acquiring GPS coordinates...</p>
             </div>
           ) : (
             <>
@@ -129,8 +129,8 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
                       onClick={() => setPlaceName(p.name)}
                       className={`p-2 rounded-lg border text-left text-xs transition ${
                         placeName === p.name
-                          ? 'bg-quantum-cyan/20 border-quantum-cyan text-white font-semibold'
-                          : 'bg-wa-panel border-wa-border text-wa-textSecondary hover:text-white hover:bg-wa-hover'
+                          ? 'bg-quantum-cyan/20 border-quantum-cyan text-wa-textPrimary font-semibold'
+                          : 'bg-wa-panel border-wa-border text-wa-textSecondary hover:text-wa-textPrimary hover:bg-wa-hover'
                       }`}
                     >
                       {p.label}
@@ -150,7 +150,7 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
                     value={placeName}
                     onChange={(e) => setPlaceName(e.target.value)}
                     placeholder="e.g. My Current Location"
-                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
+                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
                   />
                 </div>
                 <div>
@@ -162,7 +162,7 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="e.g. Street name or Landmark"
-                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
+                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
                   />
                 </div>
               </div>
@@ -176,7 +176,7 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
             type="button"
             onClick={fetchCurrentLocation}
             disabled={loading}
-            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-white text-xs font-semibold rounded-lg border border-wa-border transition flex items-center gap-1.5"
+            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textPrimary text-xs font-semibold rounded-lg border border-wa-border transition flex items-center gap-1.5"
           >
             <Navigation className="w-3.5 h-3.5 text-quantum-cyan" />
             <span>Re-locate</span>
@@ -186,7 +186,7 @@ export default function LocationShareModal({ onSendLocation, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white text-xs font-semibold rounded-lg transition"
+              className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary text-xs font-semibold rounded-lg transition"
             >
               Cancel
             </button>

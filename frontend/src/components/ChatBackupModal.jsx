@@ -203,7 +203,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
               <Archive className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-white leading-tight truncate">Chat Backup & Archive</h2>
+              <h2 className="text-sm sm:text-base font-bold text-wa-textPrimary leading-tight truncate">Chat Backup & Archive</h2>
               <p className="text-[11px] text-wa-textSecondary font-mono truncate">
                 Cryptographic export & QDS verification
               </p>
@@ -211,7 +211,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -224,7 +224,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
             className={`py-3 px-4 font-semibold border-b-2 transition flex items-center gap-1.5 ${
               activeTab === 'export'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <Download className="w-3.5 h-3.5" />
@@ -235,7 +235,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
             className={`py-3 px-4 font-semibold border-b-2 transition flex items-center gap-1.5 ${
               activeTab === 'inspect'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -250,7 +250,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
               {loading ? (
                 <div className="py-12 flex flex-col items-center justify-center text-wa-textSecondary space-y-3">
                   <Loader2 className="w-8 h-8 text-quantum-cyan animate-spin" />
-                  <p className="text-sm font-semibold text-white">Generating Quantum Backup...</p>
+                  <p className="text-sm font-semibold text-wa-textPrimary">Generating Quantum Backup...</p>
                   <p className="text-xs">Gathering Pauli measurement traces & hashing SHA-256 seal.</p>
                 </div>
               ) : errorMsg ? (
@@ -272,7 +272,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                   <div className="p-3.5 bg-quantum-cyan/10 border border-quantum-cyan/30 rounded-xl text-quantum-cyan flex items-start gap-2.5">
                     <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="font-bold text-white">Quantum Cryptographic Archive Ready</strong>
+                      <strong className="font-bold text-wa-textPrimary">Quantum Cryptographic Archive Ready</strong>
                       <p className="text-[11px] text-quantum-cyan/80 mt-0.5 leading-relaxed">
                         This backup includes complete conversation history, sender quantum keys, and QDS Pauli eigenstate verification metrics sealed with a deterministic SHA-256 checksum.
                       </p>
@@ -283,7 +283,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                   <div className="grid grid-cols-2 gap-3 font-mono">
                     <div className="bg-wa-panel p-3 rounded-lg border border-wa-border text-center">
                       <span className="text-[10px] text-wa-textSecondary uppercase block">Messages Archived</span>
-                      <span className="text-2xl font-bold text-white block my-0.5">
+                      <span className="text-2xl font-bold text-wa-textPrimary block my-0.5">
                         {backupData?.messagesCount || 0}
                       </span>
                       <span className="text-[10px] text-wa-textSecondary">Verified records</span>
@@ -301,7 +301,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                   {/* Cryptographic Seal Details */}
                   <div className="bg-wa-panel/60 p-3.5 rounded-xl border border-wa-border space-y-2 font-mono text-[11px]">
                     <div className="flex items-center justify-between text-wa-textSecondary">
-                      <span className="text-white font-semibold">Integrity Checksum:</span>
+                      <span className="text-wa-textPrimary font-semibold">Integrity Checksum:</span>
                       <span className="text-wa-green flex items-center gap-1 font-bold">
                         <CheckCircle2 className="w-3 h-3" /> Sealed
                       </span>
@@ -324,7 +324,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                         className="p-3.5 bg-wa-panel hover:bg-wa-hover border border-quantum-cyan/40 hover:border-quantum-cyan rounded-xl text-left transition group shadow-md"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-white group-hover:text-quantum-cyan flex items-center gap-1.5">
+                          <span className="font-bold text-wa-textPrimary group-hover:text-quantum-cyan flex items-center gap-1.5">
                             <FileCode className="w-4 h-4 text-quantum-cyan" /> Quantum JSON (.json)
                           </span>
                           <Download className="w-3.5 h-3.5 text-quantum-cyan" />
@@ -340,7 +340,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                         className="p-3.5 bg-wa-panel hover:bg-wa-hover border border-wa-border hover:border-wa-green rounded-xl text-left transition group shadow-md"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-white group-hover:text-wa-green flex items-center gap-1.5">
+                          <span className="font-bold text-wa-textPrimary group-hover:text-wa-green flex items-center gap-1.5">
                             <FileText className="w-4 h-4 text-wa-green" /> Text Transcript (.txt)
                           </span>
                           <Download className="w-3.5 h-3.5 text-wa-green" />
@@ -361,7 +361,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
               {/* File Selector */}
               <div className="p-6 border-2 border-dashed border-wa-border rounded-xl bg-wa-panel/40 text-center hover:border-quantum-cyan transition">
                 <Archive className="w-8 h-8 text-quantum-cyan mx-auto mb-2 opacity-80" />
-                <p className="text-xs font-semibold text-white">Select a QChat JSON Backup to Inspect</p>
+                <p className="text-xs font-semibold text-wa-textPrimary">Select a QChat JSON Backup to Inspect</p>
                 <p className="text-[11px] text-wa-textSecondary mt-0.5">
                   Verify cryptographic SHA-256 seal integrity and review archived messages.
                 </p>
@@ -429,15 +429,15 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                   <div className="bg-wa-panel/60 p-3.5 rounded-xl border border-wa-border grid grid-cols-2 gap-2 text-[11px]">
                     <div>
                       <span className="text-wa-textSecondary block">Chat Name</span>
-                      <span className="text-white font-semibold">{inspectResult.parsed?.metadata?.name || 'Quantum Chat'}</span>
+                      <span className="text-wa-textPrimary font-semibold">{inspectResult.parsed?.metadata?.name || 'Quantum Chat'}</span>
                     </div>
                     <div>
                       <span className="text-wa-textSecondary block">Archived Messages</span>
-                      <span className="text-white font-semibold">{inspectResult.parsed?.messagesCount || 0} messages</span>
+                      <span className="text-wa-textPrimary font-semibold">{inspectResult.parsed?.messagesCount || 0} messages</span>
                     </div>
                     <div>
                       <span className="text-wa-textSecondary block">Exported Date</span>
-                      <span className="text-white font-mono">
+                      <span className="text-wa-textPrimary font-mono">
                         {new Date(inspectResult.parsed?.metadata?.exportedAt).toLocaleString()}
                       </span>
                     </div>
@@ -456,7 +456,7 @@ export default function ChatBackupModal({ activeChat, onClose, onRestoreSuccess 
                       {(inspectResult.parsed?.messages || []).map((m, idx) => (
                         <div key={idx} className="p-1.5 rounded bg-wa-surface/80 border border-wa-border/50">
                           <span className="text-quantum-cyan font-semibold">{m.sender?.name || 'User'}: </span>
-                          <span className="text-white">{m.content}</span>
+                          <span className="text-wa-textPrimary">{m.content}</span>
                           <span className="text-wa-textSecondary text-[10px] ml-2">
                             ({new Date(m.timestamp).toLocaleTimeString()})
                           </span>

@@ -47,12 +47,12 @@ export default function ForwardModal({ message, chats = [], currentUser, onForwa
             <div className="w-8 h-8 rounded-full bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan">
               <Forward className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Forward Message</h3>
+            <h3 className="text-sm font-bold text-wa-textPrimary">Forward Message</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -72,7 +72,7 @@ export default function ForwardModal({ message, chats = [], currentUser, onForwa
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chat or contact..."
-              className="w-full bg-transparent text-white placeholder-wa-textSecondary focus:outline-none text-xs"
+              className="w-full bg-transparent text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none text-xs"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function ForwardModal({ message, chats = [], currentUser, onForwa
                       className="w-9 h-9 rounded-full object-cover bg-wa-bg border border-wa-border shrink-0"
                     />
                     <div className="min-w-0">
-                      <span className={`font-semibold block truncate ${isSelected ? 'text-wa-green' : 'text-white'}`}>
+                      <span className={`font-semibold block truncate ${isSelected ? 'text-wa-green' : 'text-wa-textPrimary'}`}>
                         {name}
                       </span>
                       <span className="text-[10px] text-wa-textSecondary block">
@@ -143,7 +143,7 @@ export default function ForwardModal({ message, chats = [], currentUser, onForwa
             type="button"
             onClick={onClose}
             disabled={forwarding}
-            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white text-xs font-semibold rounded-lg transition"
+            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary text-xs font-semibold rounded-lg transition"
           >
             Cancel
           </button>

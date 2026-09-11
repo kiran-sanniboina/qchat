@@ -23,7 +23,7 @@ export default function VerificationDetailModal({ message, onClose }) {
               {isAccepted ? <ShieldCheck className="w-6 h-6" /> : <ShieldAlert className="w-6 h-6" />}
             </div>
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-wa-textPrimary flex items-center gap-2">
                 Quantum Digital Signature Inspector
                 <span
                   className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
@@ -43,7 +43,7 @@ export default function VerificationDetailModal({ message, onClose }) {
 
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -74,7 +74,7 @@ export default function VerificationDetailModal({ message, onClose }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-wa-surface p-3 rounded-lg border border-wa-border text-center">
               <span className="text-[10px] text-wa-textSecondary block uppercase font-semibold">Teleported Qubits</span>
-              <span className="text-lg font-mono font-bold text-white">{ver.totalQubits || meta.qubitCount || 32}</span>
+              <span className="text-lg font-mono font-bold text-wa-textPrimary">{ver.totalQubits || meta.qubitCount || 32}</span>
             </div>
             <div className="bg-wa-surface p-3 rounded-lg border border-wa-border text-center">
               <span className="text-[10px] text-wa-textSecondary block uppercase font-semibold">Matching States</span>
@@ -88,19 +88,19 @@ export default function VerificationDetailModal({ message, onClose }) {
             </div>
             <div className="bg-wa-surface p-3 rounded-lg border border-wa-border text-center">
               <span className="text-[10px] text-wa-textSecondary block uppercase font-semibold">Threshold (&tau;)</span>
-              <span className="text-lg font-mono font-bold text-white">&le; {((ver.threshold || 0.05) * 100).toFixed(0)}%</span>
+              <span className="text-lg font-mono font-bold text-wa-textPrimary">&le; {((ver.threshold || 0.05) * 100).toFixed(0)}%</span>
             </div>
           </div>
 
           {/* Classical & Protocol Checklist */}
           <div className="bg-wa-surface p-4 rounded-xl border border-wa-border space-y-2 font-mono">
-            <h4 className="text-white font-bold text-xs uppercase mb-2 flex items-center gap-1.5 font-sans">
+            <h4 className="text-wa-textPrimary font-bold text-xs uppercase mb-2 flex items-center gap-1.5 font-sans">
               <Lock className="w-3.5 h-3.5 text-wa-green" /> Dual-Layer Protocol Verification
             </h4>
 
             <div className="flex justify-between py-1 border-b border-wa-border/50">
               <span className="text-wa-textSecondary">Classical Integrity Hash (SHA-256):</span>
-              <span className="text-white truncate max-w-xs font-mono">{message.messageHash}</span>
+              <span className="text-wa-textPrimary truncate max-w-xs font-mono">{message.messageHash}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-wa-border/50">
               <span className="text-wa-textSecondary">AES-256-GCM Confidentiality:</span>
@@ -125,7 +125,7 @@ export default function VerificationDetailModal({ message, onClose }) {
           {/* Teleported Signature Qubits Sample Visualizer */}
           {records.length > 0 && (
             <div className="bg-wa-surface p-4 rounded-xl border border-wa-border">
-              <h4 className="text-white font-bold text-xs uppercase mb-2 flex items-center gap-1.5 font-sans">
+              <h4 className="text-wa-textPrimary font-bold text-xs uppercase mb-2 flex items-center gap-1.5 font-sans">
                 <Cpu className="w-3.5 h-3.5 text-quantum-cyan" /> Pauli Signature Eigenstates & Corrections
               </h4>
               <p className="text-[11px] text-wa-textSecondary mb-3">

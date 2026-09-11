@@ -86,13 +86,13 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
       <div className="w-full max-w-md bg-wa-panel rounded-xl sm:rounded-2xl border border-wa-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh]">
         {/* Header */}
         <div className="h-14 sm:h-16 px-4 sm:px-6 bg-wa-surface border-b border-wa-border flex items-center justify-between shrink-0">
-          <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 truncate">
+          <h3 className="text-sm sm:text-base font-bold text-wa-textPrimary flex items-center gap-2 truncate">
             <UserPlus className="w-5 h-5 text-wa-green shrink-0" />
             <span>New Quantum Chat</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -105,7 +105,7 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition ${
               activeTab === 'direct'
                 ? 'border-wa-green text-wa-green'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             1:1 Direct Chat
@@ -115,7 +115,7 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
             className={`flex-1 py-3 text-xs font-semibold border-b-2 transition flex items-center justify-center gap-1.5 ${
               activeTab === 'group'
                 ? 'border-wa-green text-wa-green'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <Users className="w-3.5 h-3.5" /> Group Chat
@@ -130,7 +130,7 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Enter Quantum Group Name..."
-              className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-xs text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green"
+              className="w-full bg-wa-bg border border-wa-border rounded px-3 py-2 text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green"
             />
             <div className="text-[11px] text-wa-textSecondary flex justify-between">
               <span>Select participants below ({selectedUsers.length} selected)</span>
@@ -157,7 +157,7 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder="Search registered contacts..."
-              className="w-full bg-transparent text-xs text-white placeholder-wa-textSecondary focus:outline-none"
+              className="w-full bg-transparent text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none"
             />
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function NewChatModal({ onClose, onChatCreated, currentUser }) {
                       className="w-10 h-10 rounded-full object-cover bg-wa-bg border border-wa-border"
                     />
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-wa-textPrimary flex items-center gap-1.5">
                         {u.name}
                         {u.isOnline && <span className="w-1.5 h-1.5 rounded-full bg-wa-green" />}
                       </h4>

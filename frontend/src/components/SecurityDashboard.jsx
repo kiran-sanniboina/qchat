@@ -166,7 +166,7 @@ export default function SecurityDashboard({
             <ShieldCheck className="w-6 h-6 text-quantum-cyan" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 truncate">
+            <h2 className="text-sm sm:text-base font-bold text-wa-textPrimary flex items-center gap-2 truncate">
               Quantum Security & Threat Panel
             </h2>
             <p className="text-xs text-wa-textSecondary font-mono truncate">
@@ -177,7 +177,7 @@ export default function SecurityDashboard({
 
         <button
           onClick={onClose}
-          className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0 ml-2"
+          className="p-2 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition shrink-0 ml-2"
         >
           <X className="w-5 h-5" />
         </button>
@@ -203,7 +203,7 @@ export default function SecurityDashboard({
               className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition shrink-0 ${
                 activeTab === tab.id
                   ? 'border-wa-green text-wa-green'
-                  : 'border-transparent text-wa-textSecondary hover:text-white'
+                  : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
               }`}
             >
               <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -223,7 +223,7 @@ export default function SecurityDashboard({
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Radio className="w-5 h-5 text-quantum-cyan" />
-                  <h3 className="text-sm font-bold text-white">Dynamic E91 Entanglement Channel</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary">Dynamic E91 Entanglement Channel</h3>
                 </div>
                 <span
                   className={`text-xs px-2.5 py-0.5 rounded font-bold uppercase ${
@@ -245,7 +245,7 @@ export default function SecurityDashboard({
                   <div className="text-[11px] text-wa-textSecondary font-semibold uppercase tracking-wider mb-1">
                     CHSH S-Value
                   </div>
-                  <div className="text-3xl font-mono font-extrabold text-white my-1">
+                  <div className="text-3xl font-mono font-extrabold text-wa-textPrimary my-1">
                     {e91.chshS?.toFixed(3) || '2.828'}
                   </div>
                   <div className="text-[10px] text-quantum-cyan flex items-center justify-center gap-1">
@@ -260,7 +260,7 @@ export default function SecurityDashboard({
                   <div className="text-[11px] text-wa-textSecondary font-semibold uppercase tracking-wider mb-1">
                     QBER (Error Rate)
                   </div>
-                  <div className="text-3xl font-mono font-extrabold text-white my-1">
+                  <div className="text-3xl font-mono font-extrabold text-wa-textPrimary my-1">
                     {((e91.qberEstimate || 0) * 100).toFixed(1)}%
                   </div>
                   <div className="text-[10px] text-wa-textSecondary">
@@ -271,7 +271,7 @@ export default function SecurityDashboard({
 
               {/* Sliders for Simulated Channel Disturbance */}
               <div className="bg-wa-panel/60 p-3.5 rounded-lg border border-wa-border space-y-3">
-                <div className="text-xs font-semibold text-white flex items-center gap-1">
+                <div className="text-xs font-semibold text-wa-textPrimary flex items-center gap-1">
                   <Sliders className="w-3.5 h-3.5 text-wa-textSecondary" /> Channel Test Injection Parameters
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
@@ -332,7 +332,7 @@ export default function SecurityDashboard({
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-quantum-cyan" />
-                  <h3 className="text-sm font-bold text-white">Latest Message QDS Breakdown</h3>
+                  <h3 className="text-sm font-bold text-wa-textPrimary">Latest Message QDS Breakdown</h3>
                 </div>
                 {latestVer && (
                   <span
@@ -352,7 +352,7 @@ export default function SecurityDashboard({
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="bg-wa-panel p-2.5 rounded border border-wa-border">
                       <span className="text-wa-textSecondary text-[10px] block">Teleported Qubits</span>
-                      <span className="font-mono font-bold text-white text-sm">{latestVer.totalQubits}</span>
+                      <span className="font-mono font-bold text-wa-textPrimary text-sm">{latestVer.totalQubits}</span>
                     </div>
                     <div className="bg-wa-panel p-2.5 rounded border border-wa-border">
                       <span className="text-wa-textSecondary text-[10px] block">Matching States</span>
@@ -360,7 +360,7 @@ export default function SecurityDashboard({
                     </div>
                     <div className="bg-wa-panel p-2.5 rounded border border-wa-border">
                       <span className="text-wa-textSecondary text-[10px] block">Mismatch Rate</span>
-                      <span className="font-mono font-bold text-white text-sm">
+                      <span className="font-mono font-bold text-wa-textPrimary text-sm">
                         {((latestVer.mismatchRate || 0) * 100).toFixed(1)}%
                       </span>
                     </div>
@@ -369,7 +369,7 @@ export default function SecurityDashboard({
                   <div className="p-3 bg-wa-panel rounded border border-wa-border space-y-1.5 font-mono text-[11px]">
                     <div className="flex justify-between">
                       <span className="text-wa-textSecondary">Acceptance Threshold (&tau;):</span>
-                      <span className="text-white">&le; {(latestVer.threshold * 100).toFixed(0)}%</span>
+                      <span className="text-wa-textPrimary">&le; {(latestVer.threshold * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-wa-textSecondary">Classical Integrity (SHA256):</span>
@@ -414,7 +414,7 @@ export default function SecurityDashboard({
         {activeTab === 'threats' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Live Threat & Intrusion Log Feed</h3>
+              <h3 className="text-sm font-bold text-wa-textPrimary">Live Threat & Intrusion Log Feed</h3>
               <button
                 onClick={fetchSecurityData}
                 className="text-xs text-wa-green hover:underline flex items-center gap-1 font-semibold"
@@ -426,7 +426,7 @@ export default function SecurityDashboard({
             {threatLogs.length === 0 ? (
               <div className="text-center p-8 bg-wa-surface rounded-xl border border-wa-border text-wa-textSecondary">
                 <ShieldCheck className="w-10 h-10 text-wa-green mx-auto mb-2 opacity-80" />
-                <p className="text-sm font-semibold text-white">Zero Threats Detected</p>
+                <p className="text-sm font-semibold text-wa-textPrimary">Zero Threats Detected</p>
                 <p className="text-xs mt-1">All messages and quantum channels have passed deterministic integrity verification.</p>
               </div>
             ) : (
@@ -451,7 +451,7 @@ export default function SecurityDashboard({
 
                     {threat.evidence && Object.keys(threat.evidence).length > 0 && (
                       <div className="bg-wa-panel/80 p-2.5 rounded border border-wa-border/80 font-mono text-[11px] text-wa-textSecondary">
-                        <span className="text-white font-semibold block mb-1">Cryptographic Evidence:</span>
+                        <span className="text-wa-textPrimary font-semibold block mb-1">Cryptographic Evidence:</span>
                         <pre className="overflow-x-auto whitespace-pre-wrap">
                           {JSON.stringify(threat.evidence, null, 2)}
                         </pre>
@@ -529,7 +529,7 @@ export default function SecurityDashboard({
                     } disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-white group-hover:text-red-300">
+                      <span className="text-xs font-bold text-wa-textPrimary group-hover:text-red-500">
                         {att.title}
                       </span>
                       {isCurrent ? (
@@ -553,7 +553,7 @@ export default function SecurityDashboard({
               <div className="p-3.5 bg-quantum-cyan/10 border border-quantum-cyan/40 rounded-xl text-xs text-quantum-cyan flex items-start gap-3 animate-pulse">
                 <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-white">
+                  <div className="font-bold text-wa-textPrimary">
                     Simulating Threat: <span className="text-quantum-cyan">{simulatingAttack}</span>
                   </div>
                   <div className="text-[11px] text-wa-textSecondary mt-0.5 leading-relaxed">
@@ -576,7 +576,7 @@ export default function SecurityDashboard({
                 <button
                   type="button"
                   onClick={() => setSimError(null)}
-                  className="text-red-400 hover:text-white text-base leading-none px-1 py-0.5"
+                  className="text-red-400 hover:text-wa-textPrimary text-base leading-none px-1 py-0.5"
                   title="Dismiss"
                 >
                   &times;
@@ -588,7 +588,7 @@ export default function SecurityDashboard({
             {simFeedback && (
               <div className="p-4 bg-red-950/40 rounded-xl border border-red-500/60 space-y-2.5 animate-in fade-in zoom-in-95">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-wa-textPrimary flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-wa-green" /> Deterministic Rule Triggered:
                   </span>
                   <span className="px-2 py-0.5 rounded bg-red-500/30 text-red-300 font-mono text-[10px] font-bold">
@@ -596,7 +596,7 @@ export default function SecurityDashboard({
                   </span>
                 </div>
 
-                <p className="text-xs text-white font-medium">
+                <p className="text-xs text-wa-textPrimary font-medium">
                   {simFeedback.verificationResult?.reason}
                 </p>
 
@@ -614,7 +614,7 @@ export default function SecurityDashboard({
         {activeTab === 'benchmark' && (
           <div className="space-y-4 text-xs">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Quantum Security Benchmark & Noise Sensitivity</h3>
+              <h3 className="text-sm font-bold text-wa-textPrimary">Quantum Security Benchmark & Noise Sensitivity</h3>
               <button
                 onClick={handleLoadBenchmark}
                 disabled={benchmarkLoading}
@@ -665,7 +665,7 @@ export default function SecurityDashboard({
 
                 {/* Noise Sensitivity Table */}
                 <div className="bg-wa-surface p-4 rounded-xl border border-wa-border">
-                  <h4 className="font-bold text-white mb-2 text-xs">Depolarizing Channel Sensitivity Curve</h4>
+                  <h4 className="font-bold text-wa-textPrimary mb-2 text-xs">Depolarizing Channel Sensitivity Curve</h4>
                   <table className="w-full text-left font-mono text-[11px]">
                     <thead>
                       <tr className="border-b border-wa-border text-wa-textSecondary">
@@ -678,14 +678,14 @@ export default function SecurityDashboard({
                     <tbody className="divide-y divide-wa-border/50">
                       {benchmarkMatrix.noiseSensitivityCurve?.map((row, idx) => (
                         <tr key={idx} className="hover:bg-wa-panel/40">
-                          <td className="py-1.5 text-white">{(row.noiseRate * 100).toFixed(0)}%</td>
+                          <td className="py-1.5 text-wa-textPrimary">{(row.noiseRate * 100).toFixed(0)}%</td>
                           <td className="py-1.5 text-quantum-cyan">{row.chshS.toFixed(3)}</td>
                           <td className="py-1.5">{((row.qber || 0) * 100).toFixed(1)}%</td>
                           <td className="py-1.5">
                             <span
                               className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
                                 row.status === 'PASS'
-                                  ? 'bg-wa-green/20 text-wa-green'
+                                    ? 'bg-wa-green/20 text-wa-green'
                                   : 'bg-red-500/20 text-red-400'
                               }`}
                             >
@@ -700,7 +700,7 @@ export default function SecurityDashboard({
 
                 {/* Security Claims Disclaimer Notice */}
                 <div className="p-3 bg-wa-panel rounded-lg border border-wa-border text-[11px] text-wa-textSecondary leading-relaxed">
-                  <strong className="text-white block mb-1">Simulated Protocol Notice:</strong>
+                  <strong className="text-wa-textPrimary block mb-1">Simulated Protocol Notice:</strong>
                   This software is a prototype running Qiskit Aer simulation. It does not provide unconditional quantum security on physical hardware, but rigorously models the mathematical protocol of Dynamic E91 channel verification, 3-qubit teleportation, and deterministic threat classification.
                 </div>
               </div>

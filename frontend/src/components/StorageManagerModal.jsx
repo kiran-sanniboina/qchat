@@ -79,7 +79,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
               <HardDrive className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white leading-tight">Storage Manager</h3>
+              <h3 className="text-sm font-bold text-wa-textPrimary leading-tight">Storage Manager</h3>
               <p className="text-[11px] text-wa-textSecondary">Media breakdown & 1-click cleanup</p>
             </div>
           </div>
@@ -89,14 +89,14 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
               onClick={fetchStorageOverview}
               disabled={loading}
               title="Refresh usage"
-              className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+              className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+              className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -116,7 +116,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
           {loading && !data ? (
             <div className="py-12 flex flex-col items-center justify-center text-wa-textSecondary space-y-2">
               <Loader2 className="w-8 h-8 text-quantum-cyan animate-spin" />
-              <p className="text-white font-medium">Calculating media storage footprint...</p>
+              <p className="text-wa-textPrimary font-medium">Calculating media storage footprint...</p>
             </div>
           ) : (
             <>
@@ -124,7 +124,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
               <div className="bg-wa-panel p-4 rounded-xl border border-wa-border space-y-3">
                 <div className="flex items-baseline justify-between">
                   <div>
-                    <span className="text-2xl font-extrabold text-white">
+                    <span className="text-2xl font-extrabold text-wa-textPrimary">
                       {formatBytes(overview.totalSize)}
                     </span>
                     <span className="text-wa-textSecondary text-xs ml-1.5">used</span>
@@ -187,7 +187,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
                             className="w-10 h-10 rounded-full object-cover bg-wa-surface border border-wa-border shrink-0"
                           />
                           <div className="min-w-0">
-                            <span className="font-semibold text-white block truncate">{chat.name}</span>
+                            <span className="font-semibold text-wa-textPrimary block truncate">{chat.name}</span>
                             <span className="text-[11px] text-wa-textSecondary block">
                               {chat.mediaCount} files &bull; <strong className="text-quantum-cyan font-mono">{formatBytes(chat.totalSize)}</strong>
                             </span>
@@ -198,7 +198,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
                           type="button"
                           onClick={() => handleClearChatMedia(chat.chatId, chat.name)}
                           disabled={clearingChatId === chat.chatId}
-                          className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shrink-0"
+                          className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shrink-0"
                           title="Delete media for this conversation"
                         >
                           {clearingChatId === chat.chatId ? (
@@ -222,7 +222,7 @@ export default function StorageManagerModal({ onClose, onStorageCleared }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-wa-surface hover:bg-wa-hover text-white text-xs font-semibold rounded-lg border border-wa-border transition"
+            className="px-4 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textPrimary text-xs font-semibold rounded-lg border border-wa-border transition"
           >
             Close
           </button>

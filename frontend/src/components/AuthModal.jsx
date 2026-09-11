@@ -523,7 +523,7 @@ export default function AuthModal({ onAuthSuccess }) {
 
                   {/* Demonstration Sandbox Notice (when real SMTP is not configured) */}
                   {!isRealEmail && (
-                    <div className="p-3.5 mb-4 rounded-lg bg-quantum-cyan/10 border border-quantum-cyan/30 text-xs text-white space-y-2">
+                    <div className="p-3.5 mb-4 rounded-lg bg-quantum-cyan/10 border border-quantum-cyan/30 text-xs text-wa-textPrimary space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-quantum-cyan flex items-center gap-1.5">
                           <Info className="w-4 h-4 text-quantum-cyan shrink-0" />
@@ -641,7 +641,7 @@ export default function AuthModal({ onAuthSuccess }) {
                     <button
                       type="button"
                       onClick={() => { setViewMode('auth'); setError(''); }}
-                      className="hover:text-white transition"
+                      className="hover:text-wa-textPrimary transition"
                     >
                       Cancel
                     </button>
@@ -655,7 +655,7 @@ export default function AuthModal({ onAuthSuccess }) {
                   <div className="w-14 h-14 rounded-full bg-wa-green/20 text-wa-green flex items-center justify-center mx-auto mb-4 border border-wa-green/30 shadow-lg">
                     <CheckCircle className="w-8 h-8 text-wa-green" />
                   </div>
-                  <h2 className="text-xl font-bold text-white mb-2">Password Successfully Updated!</h2>
+                  <h2 className="text-xl font-bold text-wa-textPrimary mb-2">Password Successfully Updated!</h2>
                   <p className="text-xs text-wa-textSecondary max-w-sm mx-auto mb-6 leading-relaxed">
                     Your password has been updated. You can now log into your QChat account using your new credentials.
                   </p>

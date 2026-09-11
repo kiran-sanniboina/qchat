@@ -65,12 +65,12 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
             <div className="w-8 h-8 rounded-full bg-quantum-cyan/20 border border-quantum-cyan/40 flex items-center justify-center text-quantum-cyan">
               <User className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Share Contact</h3>
+            <h3 className="text-sm font-bold text-wa-textPrimary">Share Contact</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -84,7 +84,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
             className={`py-2.5 px-3 font-semibold border-b-2 transition flex items-center gap-1.5 ${
               activeTab === 'existing'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -96,7 +96,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
             className={`py-2.5 px-3 font-semibold border-b-2 transition flex items-center gap-1.5 ${
               activeTab === 'custom'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <User className="w-3.5 h-3.5" />
@@ -133,7 +133,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
                         className="w-9 h-9 rounded-full object-cover bg-wa-bg border border-wa-border"
                       />
                       <div>
-                        <span className="font-semibold text-white block">{contact.name}</span>
+                        <span className="font-semibold text-wa-textPrimary block">{contact.name}</span>
                         <span className="text-[11px] text-wa-textSecondary block">{contact.email}</span>
                       </div>
                     </div>
@@ -152,7 +152,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
                   className="w-12 h-12 rounded-full object-cover bg-wa-surface border border-wa-border shadow"
                 />
                 <div className="min-w-0 flex-1">
-                  <span className="font-bold text-white text-sm block truncate">
+                  <span className="font-bold text-wa-textPrimary text-sm block truncate">
                     {name || 'Contact Name'}
                   </span>
                   <span className="text-[11px] text-quantum-cyan flex items-center gap-1 font-mono mt-0.5 truncate">
@@ -177,7 +177,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Alice Quantum"
-                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
+                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
                   />
                 </div>
 
@@ -190,7 +190,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. +1 555 123 4567"
-                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
+                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
                   />
                 </div>
 
@@ -203,7 +203,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. alice@quantum.io"
-                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-white placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
+                    className="w-full bg-wa-panel border border-wa-border rounded-lg px-3 py-2 text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-wa-green text-xs"
                   />
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function ContactShareModal({ chats = [], currentUser, onSendConta
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-white text-xs font-semibold rounded-lg transition"
+            className="px-3 py-2 bg-wa-surface hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary text-xs font-semibold rounded-lg transition"
           >
             Cancel
           </button>

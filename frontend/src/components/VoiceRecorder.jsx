@@ -161,7 +161,7 @@ export default function VoiceRecorder({ onSendVoice, onCancel }) {
         </span>
 
         {/* Live Timer */}
-        <span className="font-mono text-xs sm:text-sm font-semibold text-white shrink-0">
+        <span className="font-mono text-xs sm:text-sm font-semibold text-wa-textPrimary shrink-0">
           {formatTimer(duration)}
         </span>
 

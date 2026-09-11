@@ -141,7 +141,7 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'emojis'
                 ? 'bg-wa-surface text-quantum-cyan border border-quantum-cyan/30'
-                : 'text-wa-textSecondary hover:text-white'
+                : 'text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <Smile className="w-4 h-4" /> Emojis
@@ -152,7 +152,7 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'stickers'
                 ? 'bg-wa-surface text-quantum-cyan border border-quantum-cyan/30'
-                : 'text-wa-textSecondary hover:text-white'
+                : 'text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <Sparkles className="w-4 h-4" /> Quantum Stickers
@@ -161,7 +161,7 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
         <button
           type="button"
           onClick={onClose}
-          className="p-1 text-wa-textSecondary hover:text-white rounded-full transition"
+          className="p-1 text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition"
         >
           <X className="w-4 h-4" />
         </button>
@@ -178,13 +178,13 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search emojis..."
-                className="w-full bg-transparent text-white placeholder-wa-textSecondary focus:outline-none text-xs"
+                className="w-full bg-transparent text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none text-xs"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="text-wa-textSecondary hover:text-white"
+                  className="text-wa-textSecondary hover:text-wa-textPrimary"
                 >
                   &times;
                 </button>
@@ -203,7 +203,7 @@ export default function EmojiStickerPicker({ onSelectEmoji, onSelectSticker, onC
                   title={cat.name}
                   className={`p-1.5 text-sm rounded-lg transition ${
                     selectedCategory === cat.id
-                      ? 'bg-wa-hover text-white scale-110 shadow-sm ring-1 ring-quantum-cyan/50'
+                      ? 'bg-wa-hover text-wa-textPrimary scale-110 shadow-sm ring-1 ring-quantum-cyan/50'
                       : 'hover:bg-wa-hover/50 opacity-75 hover:opacity-100'
                   }`}
                 >

@@ -87,7 +87,7 @@ export default function ChatProfileModal({
               {activeChat.isGroup ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-white leading-tight truncate">
+              <h2 className="text-sm sm:text-base font-bold text-wa-textPrimary leading-tight truncate">
                 {activeChat.isGroup ? 'Group Details' : 'Contact Profile'}
               </h2>
               <p className="text-[11px] text-wa-textSecondary font-mono truncate">
@@ -97,7 +97,7 @@ export default function ChatProfileModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-white rounded-full transition shrink-0"
+            className="p-1.5 hover:bg-wa-hover text-wa-textSecondary hover:text-wa-textPrimary rounded-full transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -122,7 +122,7 @@ export default function ChatProfileModal({
             )}
           </div>
 
-          <h3 className="text-lg font-bold text-white leading-tight flex items-center justify-center gap-2">
+          <h3 className="text-lg font-bold text-wa-textPrimary leading-tight flex items-center justify-center gap-2">
             {displayName}
             {!activeChat.isGroup && otherParticipant?.isOnline && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-wa-green/20 text-wa-green border border-wa-green/30 font-medium">
@@ -144,7 +144,7 @@ export default function ChatProfileModal({
                 onClose();
                 if (onOpenBackup) onOpenBackup(activeChat);
               }}
-              className="px-3.5 py-1.5 bg-wa-panel hover:bg-wa-hover text-white border border-wa-border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
+              className="px-3.5 py-1.5 bg-wa-panel hover:bg-wa-hover text-wa-textPrimary border border-wa-border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
             >
               <Archive className="w-3.5 h-3.5 text-quantum-cyan" />
               <span>Backup Chat</span>
@@ -155,7 +155,7 @@ export default function ChatProfileModal({
                 onClose();
                 if (onClearChat) onClearChat(activeChat._id);
               }}
-              className="px-3.5 py-1.5 bg-wa-panel hover:bg-wa-hover text-white border border-wa-border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
+              className="px-3.5 py-1.5 bg-wa-panel hover:bg-wa-hover text-wa-textPrimary border border-wa-border rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
             >
               <Trash2 className="w-3.5 h-3.5 text-wa-textSecondary" />
               <span>Clear History</span>
@@ -195,7 +195,7 @@ export default function ChatProfileModal({
             className={`py-3 px-4 font-semibold border-b-2 transition ${
               activeTab === 'overview'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             Overview & Security
@@ -205,7 +205,7 @@ export default function ChatProfileModal({
             className={`py-3 px-4 font-semibold border-b-2 transition flex items-center gap-1.5 ${
               activeTab === 'media'
                 ? 'border-quantum-cyan text-quantum-cyan'
-                : 'border-transparent text-wa-textSecondary hover:text-white'
+                : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
             }`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
@@ -217,7 +217,7 @@ export default function ChatProfileModal({
               className={`py-3 px-4 font-semibold border-b-2 transition flex items-center gap-1.5 ${
                 activeTab === 'members'
                   ? 'border-quantum-cyan text-quantum-cyan'
-                  : 'border-transparent text-wa-textSecondary hover:text-white'
+                  : 'border-transparent text-wa-textSecondary hover:text-wa-textPrimary'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
@@ -241,7 +241,7 @@ export default function ChatProfileModal({
                       <Mail className="w-4 h-4 text-quantum-cyan shrink-0" />
                       <div className="truncate">
                         <span className="text-wa-textSecondary block text-[10px]">Email Address</span>
-                        <span className="text-white select-all font-mono">{otherParticipant.email}</span>
+                        <span className="text-wa-textPrimary select-all font-mono">{otherParticipant.email}</span>
                       </div>
                     </div>
 
@@ -249,7 +249,7 @@ export default function ChatProfileModal({
                       <Phone className="w-4 h-4 text-quantum-purple shrink-0" />
                       <div className="truncate">
                         <span className="text-wa-textSecondary block text-[10px]">Phone Number</span>
-                        <span className="text-white font-mono">
+                        <span className="text-wa-textPrimary font-mono">
                           {otherParticipant.phone || 'Not provided'}
                         </span>
                       </div>
@@ -303,7 +303,7 @@ export default function ChatProfileModal({
                     <span className="text-[10px] text-wa-textSecondary uppercase font-semibold block">
                       CHSH S-Value
                     </span>
-                    <span className="text-xl font-mono font-bold text-white block my-0.5">
+                    <span className="text-xl font-mono font-bold text-wa-textPrimary block my-0.5">
                       {e91.chshS?.toFixed(3) || '2.828'}
                     </span>
                     <span className="text-[10px] text-quantum-cyan">Quantum Bound: 2.828</span>
@@ -313,7 +313,7 @@ export default function ChatProfileModal({
                     <span className="text-[10px] text-wa-textSecondary uppercase font-semibold block">
                       QBER (Bit Error)
                     </span>
-                    <span className="text-xl font-mono font-bold text-white block my-0.5">
+                    <span className="text-xl font-mono font-bold text-wa-textPrimary block my-0.5">
                       {((e91.qberEstimate || 0) * 100).toFixed(1)}%
                     </span>
                     <span className="text-[10px] text-wa-textSecondary">Threshold &le; 8.0%</span>
@@ -341,7 +341,7 @@ export default function ChatProfileModal({
               {mediaMessages.length === 0 ? (
                 <div className="text-center py-12 text-wa-textSecondary bg-wa-panel/40 rounded-xl border border-wa-border">
                   <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-40 text-quantum-cyan" />
-                  <p className="text-sm font-semibold text-white">No Shared Media Yet</p>
+                  <p className="text-sm font-semibold text-wa-textPrimary">No Shared Media Yet</p>
                   <p className="text-xs mt-1">Photos and documents sent in this chat will appear here.</p>
                 </div>
               ) : (
@@ -349,7 +349,7 @@ export default function ChatProfileModal({
                   {/* Images Gallery */}
                   {imageMessages.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-white mb-2 flex items-center gap-1.5">
+                      <h4 className="font-semibold text-wa-textPrimary mb-2 flex items-center gap-1.5">
                         <ImageIcon className="w-3.5 h-3.5 text-quantum-cyan" /> Photos ({imageMessages.length})
                       </h4>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -381,7 +381,7 @@ export default function ChatProfileModal({
                   {/* Documents List */}
                   {docMessages.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-white mb-2 flex items-center gap-1.5">
+                      <h4 className="font-semibold text-wa-textPrimary mb-2 flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-quantum-purple" /> Documents ({docMessages.length})
                       </h4>
                       <div className="space-y-2">
@@ -400,7 +400,7 @@ export default function ChatProfileModal({
                                   <FileText className="w-4 h-4" />
                                 </div>
                                 <div className="truncate">
-                                  <span className="text-white font-medium block truncate text-xs">
+                                  <span className="text-wa-textPrimary font-medium block truncate text-xs">
                                     {msg.mediaFilename || 'Quantum Document'}
                                   </span>
                                   <span className="text-[10px] text-wa-textSecondary font-mono">
@@ -408,7 +408,7 @@ export default function ChatProfileModal({
                                   </span>
                                 </div>
                               </div>
-                              <Download className="w-4 h-4 text-wa-textSecondary group-hover:text-white shrink-0 ml-2" />
+                              <Download className="w-4 h-4 text-wa-textSecondary group-hover:text-wa-textPrimary shrink-0 ml-2" />
                             </a>
                           );
                         })}
@@ -445,7 +445,7 @@ export default function ChatProfileModal({
                           className="w-9 h-9 rounded-full object-cover border border-wa-border bg-wa-panel"
                         />
                         <div>
-                          <span className="text-white font-semibold text-xs block leading-tight">
+                          <span className="text-wa-textPrimary font-semibold text-xs block leading-tight">
                             {participant.name} {isMe && <span className="text-wa-green text-[10px] font-normal">(You)</span>}
                           </span>
                           <span className="text-[10px] text-wa-textSecondary truncate max-w-[200px] block">

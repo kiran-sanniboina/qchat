@@ -279,7 +279,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
               <button
                 type="button"
                 onClick={() => setShowUrlInput(!showUrlInput)}
-                className="text-wa-textSecondary hover:text-white underline"
+                className="text-wa-textSecondary hover:text-wa-textPrimary underline"
               >
                 {showUrlInput ? 'Hide URL input' : 'Image URL'}
               </button>
@@ -293,7 +293,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                   placeholder="https://example.com/avatar.png"
                   value={customUrlInput}
                   onChange={(e) => setCustomUrlInput(e.target.value)}
-                  className="flex-1 bg-wa-panel border border-wa-border rounded-lg px-3 py-1.5 text-xs text-white placeholder-wa-textSecondary focus:outline-none focus:border-quantum-cyan"
+                  className="flex-1 bg-wa-panel border border-wa-border rounded-lg px-3 py-1.5 text-xs text-wa-textPrimary placeholder-wa-textSecondary focus:outline-none focus:border-quantum-cyan"
                 />
                 <button
                   type="button"
@@ -337,7 +337,7 @@ export default function UserProfileModal({ currentUser, onClose, onUpdateUser })
                         onError={(e) => handleAvatarError(e, preset.id, preset.name)}
                         className="w-full h-10 rounded-lg object-contain"
                       />
-                      <span className="block text-[9px] text-center truncate text-wa-textSecondary mt-0.5 group-hover:text-white">
+                      <span className="block text-[9px] text-center truncate text-wa-textSecondary mt-0.5 group-hover:text-wa-textPrimary">
                         {preset.name}
                       </span>
                     </button>
